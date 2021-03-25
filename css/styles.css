@@ -27,3 +27,11 @@
     background-color: #C4C4C4; 
     margin: 0px;
 }
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    background-color: white;
+    text-align: center;
+    font-size: 12px;
+  }

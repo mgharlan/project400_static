@@ -6,6 +6,7 @@ $().ready(function(){
     let wasDragging = false;
     let nodePrefix = 'node_';
     let menuPrefix = 'menu_';
+    let menuTemplate = getMenuTemplate();
 
     let lines = document.getElementById('lines');
     ctx = lines.getContext("2d");
@@ -16,7 +17,7 @@ $().ready(function(){
         count++;
         let left = Math.floor(Math.random()*80);
         let top = Math.floor(Math.random()*80) + 10;
-        node = $(`<img src='frog.svg' draggable='false' class='frog' id='${node_id}' style='top: ${top}%; left: ${left}%;'></img>`).appendTo(canvas);
+        node = $(`<img src='img/frog.svg' draggable='false' class='frog' id='${node_id}' style='top: ${top}%; left: ${left}%;'></img>`).appendTo(canvas);
         menu = $(`<span draggable='false' class='dot' id='${menu_id}' style='top: ${top}%; left: ${left}%; display: none;'></span>`).appendTo(canvas);
 
         //adjust width and height to be middle of point
@@ -90,3 +91,44 @@ $().ready(function(){
     ctx.lineTo(50, 50);
     ctx.stroke();
 });
+
+function getMenuTemplate(){
+    return `
+    <div>
+        <table>
+            <thead>
+                <th>Node</th>
+            </thead>
+            <tbody>
+                <tr><td>
+                    <table>
+                        <thead>
+                            <th>Connections:</th>
+                        </thead>
+                        <tbody>
+                            <tr><td>Testing</td></tr>
+                        </tbody>
+                    </table>
+                </td></tr>
+                <tr><td>
+                    <table style="width: 100%;">
+                        <thead>
+                            <th>Functions:</th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Connect</td>
+                            </tr>
+                            <tr>
+                                <td>Disable</td>
+                            </tr>
+                            <tr>
+                                <td>Delete</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td></tr>
+            </tbody>
+        </table>
+    </div>`
+};
