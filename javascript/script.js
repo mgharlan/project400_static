@@ -1,39 +1,17 @@
-$().ready(function(){
-    let movingNode = null;
-    let count = 0;
-    let canvas = $('#canvas');
-    let isDown = false;
-    let wasDragging = false;
-    let nodePrefix = 'node_';
-    let menuPrefix = 'menu_';
-    let menuTemplate = getMenuTemplate();
+let movingNode = null;
+let count = 0;
+let canvas = null;
+let isDown = false;
+let wasDragging = false;
+let nodePrefix = 'node_';
+let menuPrefix = 'menu_';
+let connecting = false;
+let connectingNode = null;
 
+$().ready(function(){
+    canvas = $('#canvas');
     let lines = document.getElementById('lines');
     ctx = lines.getContext("2d");
-
-    $('#add').click(function(){
-        let node_id = nodePrefix + count;
-        let menu_id = menuPrefix + count;
-        count++;
-        let left = Math.floor(Math.random()*80);
-        let top = Math.floor(Math.random()*80) + 10;
-        node = $(`<img src='img/frog.svg' draggable='false' class='frog' id='${node_id}' style='top: ${top}%; left: ${left}%;'></img>`).appendTo(canvas);
-        menu = $(`<span draggable='false' class='dot' id='${menu_id}' style='top: ${top}%; left: ${left}%; display: none;'></span>`).appendTo(canvas);
-
-        //adjust width and height to be middle of point
-        let x = node.position().left;
-        let y = node.position().top;
-        let x_adj = x - node.width()/2;
-        let y_adj = y - node.height()/2;
-        node.css('left', x_adj+'px');
-        node.css('top', y_adj+'px');
-
-        let menu_x_adj = x - menu.width()/2;
-        let menu_y_adj = y - menu.height()/2;
-        menu.css('left', menu_x_adj);
-        menu.css('top', menu_y_adj);
-
-    });
 
     canvas.on('mousedown', '.frog', function(){
         isDown = true;
@@ -68,22 +46,14 @@ $().ready(function(){
 
                 let menu_x_adj = x - menu_width/2;
                 let menu_y_adj = y - menu_height/2;
+                let menu_y_shift = height/2 + menu_height/2;
                 menu.css('left', menu_x_adj);
-                menu.css('top', menu_y_adj);
+                menu.css('top', menu_y_adj + menu_y_shift);
             }
         }
     });
     canvas.on('mouseup', function(){
         isDown = false;
-    });
-    canvas.on('click', '.frog', function(){
-        if(!wasDragging){
-            let id_num = $(this).attr('id').substring(nodePrefix.length);
-            $('#' + menuPrefix +id_num).toggle();
-        }
-        else{
-            wasDragging = false;
-        }
     });
 
     ctx.beginPath();
@@ -92,9 +62,75 @@ $().ready(function(){
     ctx.stroke();
 });
 
-function getMenuTemplate(){
+function addNode(){
+    let node_id = nodePrefix + count;
+    let menu_id = menuPrefix + count;
+    count++;
+    let left = Math.floor(Math.random()*80);
+    let top = Math.floor(Math.random()*80) + 10;
+    let node = $(createNode(node_id, top, left)).appendTo(canvas);
+    let menu = $(createMenu(menu_id, top, left)).appendTo(canvas);
+
+    let width = node.width();
+    let height = node.height();
+
+    let menu_width = menu.width();
+    let menu_height = menu.height();
+
+    //adjust width and height to be middle of point
+    let x = node.position().left;
+    let y = node.position().top;
+    let x_adj = x - width/2;
+    let y_adj = y - height/2;
+    node.css('left', x_adj+'px');
+    node.css('top', y_adj+'px');
+
+    let menu_x_adj = x - menu_width/2;
+    let menu_y_adj = y - menu_height/2;
+    let menu_y_shift = height/2 + menu_height/2;
+    menu.css('left', menu_x_adj);
+    menu.css('top', menu_y_adj + menu_y_shift);
+}
+
+function addConnection(button){
+    connecting = true;
+    connectingNode = $('#' + nodePrefix + $(button).closest('div').attr('id').substring(menuPrefix.length));
+    console.log(connectingNode);
+}
+
+function clickNode(node){
+    if(connecting){
+        connecting = false;
+        console.log(node);
+    }
+    else{
+        if(!wasDragging){
+            let id_num = $(node).attr('id').substring(nodePrefix.length);
+            $('#' + menuPrefix +id_num).toggle();
+        }
+        else{
+            wasDragging = false;
+        }
+    }
+}
+
+function createNode(node_id, top, left){
     return `
-    <div>
+    <img 
+        src='img/frog.svg' 
+        draggable='false' 
+        class='frog' 
+        id='${node_id}' 
+        style=
+            'top: ${top}%; 
+            left: ${left}%;'
+        onclick=clickNode(this)
+    ></img>`
+}
+
+function createMenu(menu_id, top, left){
+    return `
+    <div draggable='false' id='${menu_id}' style='top: ${top}%; left: ${left}%; display: none; position: absolute;'>
         <table>
             <thead>
                 <th>Node</th>
@@ -117,13 +153,13 @@ function getMenuTemplate(){
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Connect</td>
+                                <td><button onclick=addConnection(this)>Connect</button></td>
                             </tr>
                             <tr>
-                                <td>Disable</td>
+                                <td><button>Disable</button></td>
                             </tr>
                             <tr>
-                                <td>Delete</td>
+                                <td><button>Delete</button></td>
                             </tr>
                         </tbody>
                     </table>

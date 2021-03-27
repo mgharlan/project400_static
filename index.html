@@ -6,9 +6,9 @@
     <script type="text/javascript" src="javascript/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="javascript/script.js"></script>
 </head>
-<body style='margin: 0;'>
+<body style='margin: 0; overflow: hidden;'>
     <div class="top-bar">
-        <button id='add' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;">Add</button>
+        <button id='add' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;" onclick=addNode()>Add</button>
     </div>
     <div id='canvas'>
         <canvas id="lines"></canvas>
