@@ -1,23 +1,27 @@
 let movingNode = null;
 let count = 0;
-let canvas = null;
+let main = null;
 let isDown = false;
 let wasDragging = false;
 let nodePrefix = 'node_';
 let menuPrefix = 'menu_';
 let connecting = false;
 let connectingNode = null;
+let ctx = null;
+let connections = [];
 
 $().ready(function(){
-    canvas = $('#canvas');
-    let lines = document.getElementById('lines');
-    ctx = lines.getContext("2d");
+    main = $('#main');
+    let canvas = document.getElementById('canvas');
+    canvas.setAttribute('width', main.width());
+    canvas.setAttribute('height', main.height());
+    ctx = canvas.getContext("2d");
 
-    canvas.on('mousedown', '.frog', function(){
+    main.on('mousedown', '.node', function(){
         isDown = true;
         movingNode = $(this);
     });
-    canvas.on('mousemove', function(event){
+    main.on('mousemove', function(event){
         if(isDown){
             node = movingNode;
             id_num = node.attr('id').substring(nodePrefix.length);
@@ -32,10 +36,10 @@ $().ready(function(){
             let menu_width = menu.width();
             let menu_height = menu.height();
 
-            let top = canvas.position().top;
-            let bottom = top + canvas.outerHeight(true);
-            let left = canvas.position().left;
-            let right = left + canvas.outerWidth(true);
+            let top = main.position().top;
+            let bottom = top + main.outerHeight(true);
+            let left = main.position().left;
+            let right = left + main.outerWidth(true);
 
 
             if (y > top + height/2 && y < bottom - height/2 && x > left + width/2 && x < right - width/2){    
@@ -50,16 +54,17 @@ $().ready(function(){
                 menu.css('left', menu_x_adj);
                 menu.css('top', menu_y_adj + menu_y_shift);
             }
+
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            for(const [start, end] of Object.entries(connections)){
+                drawLine(start, end);
+            }
+
         }
     });
-    canvas.on('mouseup', function(){
+    main.on('mouseup', function(){
         isDown = false;
     });
-
-    ctx.beginPath();
-    ctx.moveTo(10, 10);
-    ctx.lineTo(50, 50);
-    ctx.stroke();
 });
 
 function addNode(){
@@ -68,8 +73,8 @@ function addNode(){
     count++;
     let left = Math.floor(Math.random()*80);
     let top = Math.floor(Math.random()*80) + 10;
-    let node = $(createNode(node_id, top, left)).appendTo(canvas);
-    let menu = $(createMenu(menu_id, top, left)).appendTo(canvas);
+    let node = $(createNode(node_id, top, left)).appendTo(main);
+    let menu = $(createMenu(menu_id, top, left)).appendTo(main);
 
     let width = node.width();
     let height = node.height();
@@ -95,17 +100,19 @@ function addNode(){
 function addConnection(button){
     connecting = true;
     connectingNode = $('#' + nodePrefix + $(button).closest('div').attr('id').substring(menuPrefix.length));
-    console.log(connectingNode);
 }
 
 function clickNode(node){
-    if(connecting){
+    node = $(node);
+    if(connecting && node != connectingNode){
+        drawLine(node.attr('id'), connectingNode.attr('id'));
+        connections[node.attr('id')] = connectingNode.attr('id');
         connecting = false;
-        console.log(node);
+        connectingNode = null;
     }
     else{
         if(!wasDragging){
-            let id_num = $(node).attr('id').substring(nodePrefix.length);
+            let id_num = node.attr('id').substring(nodePrefix.length);
             $('#' + menuPrefix +id_num).toggle();
         }
         else{
@@ -114,12 +121,26 @@ function clickNode(node){
     }
 }
 
+function drawLine(start_node, end_node){
+    start_node = $(`#${start_node}`);
+    end_node = $(`#${end_node}`);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    x_start = start_node.position().left + start_node.width()/2;
+    y_start = start_node.position().top - $('.top-bar').height() + start_node.height()/2;
+    x_end = end_node.position().left + end_node.width()/2;
+    y_end = end_node.position().top - $('.top-bar').height() + end_node.height()/2;
+    ctx.moveTo(x_start, y_start);
+    ctx.lineTo(x_end, y_end);
+    ctx.stroke();
+}
+
 function createNode(node_id, top, left){
     return `
     <img 
         src='img/frog.svg' 
         draggable='false' 
-        class='frog' 
+        class='node' 
         id='${node_id}' 
         style=
             'top: ${top}%; 
