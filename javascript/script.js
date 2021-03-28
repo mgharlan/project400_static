@@ -56,10 +56,9 @@ $().ready(function(){
             }
 
             ctx.clearRect(0,0, canvas.width, canvas.height);
-            for(const [start, end] of Object.entries(connections)){
-                drawLine(start, end);
-            }
-
+            connections.forEach((node_pair)=>{
+                drawLine(node_pair[0], node_pair[1]);
+            });
         }
     });
     main.on('mouseup', function(){
@@ -105,8 +104,11 @@ function addConnection(button){
 function clickNode(node){
     node = $(node);
     if(connecting && node != connectingNode){
-        drawLine(node.attr('id'), connectingNode.attr('id'));
-        connections[node.attr('id')] = connectingNode.attr('id');
+        let start_node = node.attr('id');
+        let end_node = connectingNode.attr('id');
+        drawLine(start_node, end_node);
+        node_pair = [start_node, end_node];
+        connections.push(node_pair);
         connecting = false;
         connectingNode = null;
     }
