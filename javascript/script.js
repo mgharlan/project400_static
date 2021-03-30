@@ -54,14 +54,20 @@ class Node{
     }
 
     onClick(){
-        if(Node.connecting && this.node != Node.connectingNode){
+        if(Node.connecting && this.node != Node.connectingNode.node){
             let start_node = this.node_id;
-            let end_node = Node.connectingNode.attr('id');
+            let end_node = Node.connectingNode.node_id;
             this.drawLine(start_node, end_node);
-            let node_pair = [start_node, end_node];
-            console.log(`connections_${start_node.substring(Node.nodePrefix.length)}`);
-            $(`<tr><td>${start_node}:${end_node}</td></tr>`).appendTo(`#connections_${start_node.substring(Node.nodePrefix.length)}`);
-            this.connections.push(node_pair);
+            $(`<tr><td>${start_node}:${end_node}</td></tr>`).appendTo(`#${this.connections_id}`);
+            $(`<tr><td>${end_node}:${start_node}</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
+            this.connections.push([start_node, end_node]);
+            Node.connectingNode.connections.push([end_node, start_node]);
+            if(this.connections.length > 0){
+                $(`#${'none_' + this.id}`).hide();
+            }
+            if(Node.connectingNode.connections.length > 0){
+                $(`#${'none_' + Node.connectingNode.id}`).hide();
+            }
             Node.connecting = false;
             Node.connectingNode = null;
         }
@@ -117,7 +123,7 @@ class Node{
 
     addConnection(){
         Node.connecting = true;
-        Node.connectingNode = this.node;
+        Node.connectingNode = this;
     }
 
     drawLine(start_node, end_node){
