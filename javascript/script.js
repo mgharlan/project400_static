@@ -25,6 +25,7 @@ class Node{
     static connectionPrefix = 'connect_'
     static connecting = false;
     static connectingNode = null;
+    static connections = [];
     constructor(){
         this.id = Node.count;
         this.node_id = Node.nodePrefix + this.id;
@@ -54,14 +55,15 @@ class Node{
     }
 
     onClick(){
-        if(Node.connecting && this.node != Node.connectingNode.node){
+        if(Node.connecting && this.node != Node.connectingNode.node && !Node.connectingNode.connections.includes(this.node_id)){//TODO
             let start_node = this.node_id;
             let end_node = Node.connectingNode.node_id;
+            Node.connections.push([start_node, end_node]);
             this.drawLine(start_node, end_node);
-            $(`<tr><td>${start_node}:${end_node}</td></tr>`).appendTo(`#${this.connections_id}`);
-            $(`<tr><td>${end_node}:${start_node}</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
-            this.connections.push([start_node, end_node]);
-            Node.connectingNode.connections.push([end_node, start_node]);
+            $(`<tr><td>${end_node}</td></tr>`).appendTo(`#${this.connections_id}`);
+            $(`<tr><td>${start_node}</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
+            this.connections.push(end_node);
+            Node.connectingNode.connections.push(start_node);
             if(this.connections.length > 0){
                 $(`#${'none_' + this.id}`).hide();
             }
@@ -111,7 +113,7 @@ class Node{
             }
 
             ctx.clearRect(0,0, canvas.width, canvas.height);
-            this.connections.forEach((node_pair)=>{
+            Node.connections.forEach((node_pair)=>{
                 this.drawLine(node_pair[0], node_pair[1]);
             });
         }
