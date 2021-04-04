@@ -57,7 +57,7 @@ class Node{
         main.on('mouseup', this.mouseup.bind(this));
     }
 
-    onClick(){ //rewrite drawlines to use id instead of node_id
+    onClick(){
         if(Node.connecting && this.node != Node.connectingNode.node && !Node.connectingNode.connections.includes(this.node_id)){//TODO
             let start_node = this.id;
             let end_node = Node.connectingNode.id;
@@ -161,7 +161,7 @@ class Node{
         }
     }
 
-    drawLine(start_node, end_node){
+    drawLine(start_node, end_node){ //rewrite to be drawLines
         start_node = $(`#${Node.nodePrefix + start_node}`);
         end_node = $(`#${Node.nodePrefix + end_node}`);
         ctx.lineWidth = 1;
