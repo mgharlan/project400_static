@@ -8,12 +8,12 @@ $().ready(function(){
     canvas.setAttribute('width', main.width());
     canvas.setAttribute('height', main.height());
     ctx = canvas.getContext("2d");
-
     
 });
 
 function addNode(){
-    nodes.push(new Node());
+    let newNode = new Node();
+    nodes[newNode.id] = newNode;
 }
 
 class Node{
@@ -22,7 +22,8 @@ class Node{
     static nodePrefix = 'node_';
     static menuPrefix = 'menu_';
     static connectionsPrefix = 'connections_';
-    static connectionPrefix = 'connect_'
+    static connectionPrefix = 'connect_';
+    static deleteNodePrefix = 'delete_';
     static connecting = false;
     static connectingNode = null;
     static connections = [];
@@ -32,6 +33,7 @@ class Node{
         this.menu_id = Node.menuPrefix + this.id;
         this.connections_id = Node.connectionsPrefix + this.id;
         this.connect_id = Node.connectionPrefix + this.id;
+        this.delete_id = Node.deleteNodePrefix + this.id;
         this.connections = [];
         Node.nodes.push(this.id);
         
@@ -48,20 +50,21 @@ class Node{
         this.node.on('click', this.onClick.bind(this)); 
 
         $(`#${this.connect_id}`).on('click', this.addConnection.bind(this));
+        $(`#${this.delete_id}`).on('click', this.deleteNode.bind(this));
 
         main.on('mousedown', `#${this.node_id}`, this.mousedown.bind(this));
         main.on('mousemove', this.mousemove.bind(this));
         main.on('mouseup', this.mouseup.bind(this));
     }
 
-    onClick(){
+    onClick(){ //rewrite drawlines to use id instead of node_id
         if(Node.connecting && this.node != Node.connectingNode.node && !Node.connectingNode.connections.includes(this.node_id)){//TODO
-            let start_node = this.node_id;
-            let end_node = Node.connectingNode.node_id;
-            Node.connections.push([start_node, end_node]);
+            let start_node = this.id;
+            let end_node = Node.connectingNode.id;
+            Node.connections.push([end_node, start_node]);
             this.drawLine(start_node, end_node);
-            $(`<tr><td>${end_node}</td></tr>`).appendTo(`#${this.connections_id}`);
-            $(`<tr><td>${start_node}</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
+            $(`<tr id=${this.connections_id + '_' + end_node}><td>Node <b>${end_node}</b></td></tr>`).appendTo(`#${this.connections_id}`);
+            $(`<tr id=${Node.connectingNode.connections_id + '_' + start_node}><td>Node <b>${start_node}</b></td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
             this.connections.push(end_node);
             Node.connectingNode.connections.push(start_node);
             if(this.connections.length > 0){
@@ -128,9 +131,34 @@ class Node{
         Node.connectingNode = this;
     }
 
+    deleteNode(){
+        nodes.splice(this.id,1);
+        this.node.remove();
+        this.menu.remove();
+        let removeIndex = [];
+        //gather global indices
+        for(let i=0 ; i< Node.connections.length; i++){
+            if(Node.connections[i][0] == this.id || Node.connections[i][1] == this.id){
+                removeIndex.push(i);
+            }
+        }
+        //remove index from global
+        for(let i=0; i< removeIndex.length; i++){
+            Node.connections.splice(removeIndex[i],1);
+        }
+        for(let i=0; i< this.connections.length; i++){
+            nodes[this.connections[i]].removeConnection(this.id);
+        }
+    }
+
+    removeConnection(id){
+        this.connections.splice(this.connections.indexOf(id), 1);
+        $(`#${this.connections_id + '_' + id}`).remove();
+    }
+
     drawLine(start_node, end_node){
-        start_node = $(`#${start_node}`);
-        end_node = $(`#${end_node}`);
+        start_node = $(`#${Node.nodePrefix + start_node}`);
+        end_node = $(`#${Node.nodePrefix + end_node}`);
         ctx.lineWidth = 1;
         ctx.beginPath();
         let x_start = start_node.position().left + start_node.width()/2;
@@ -207,7 +235,7 @@ class Node{
                                     <td><button>Disable</button></td>
                                 </tr>
                                 <tr>
-                                    <td><button>Delete</button></td>
+                                    <td><button id=${this.delete_id}>Delete</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -216,4 +244,13 @@ class Node{
             </table>
         </div>`
     };
+}
+
+function SPF(){
+    console.log(nodes);
+    console.log(Node.connections);
+    let distances = [];
+    /*nodes.forEach(function(element){
+        distances.push(element.id);
+    });*/
 }
