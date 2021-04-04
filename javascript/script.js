@@ -13,7 +13,7 @@ $().ready(function(){
 
 function addNode(){
     let newNode = new Node();
-    nodes[newNode.id] = newNode;
+    nodes[`${newNode.id}`] = newNode;
 }
 
 class Node{
@@ -132,7 +132,6 @@ class Node{
     }
 
     deleteNode(){
-        nodes.splice(this.id,1);
         this.node.remove();
         this.menu.remove();
         let removeIndex = [];
@@ -142,18 +141,24 @@ class Node{
                 removeIndex.push(i);
             }
         }
-        //remove index from global
+        //remove index from global connections
         for(let i=0; i< removeIndex.length; i++){
             Node.connections.splice(removeIndex[i],1);
         }
+        //remove from local connections
         for(let i=0; i< this.connections.length; i++){
             nodes[this.connections[i]].removeConnection(this.id);
         }
+        //remove from global nodes list
+        nodes.splice(this.id,1);
     }
 
     removeConnection(id){
         this.connections.splice(this.connections.indexOf(id), 1);
         $(`#${this.connections_id + '_' + id}`).remove();
+        if(this.connections.length == 0){
+            $(`#none_${this.id}`).show();
+        }
     }
 
     drawLine(start_node, end_node){
