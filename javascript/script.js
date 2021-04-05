@@ -62,7 +62,7 @@ class Node{
             let start_node = this.id;
             let end_node = Node.connectingNode.id;
             Node.connections.push([end_node, start_node]);
-            this.drawLine(start_node, end_node);
+            Node.drawLines();
             $(`<tr id=${this.connections_id + '_' + end_node}><td>Node <b>${end_node}</b></td></tr>`).appendTo(`#${this.connections_id}`);
             $(`<tr id=${Node.connectingNode.connections_id + '_' + start_node}><td>Node <b>${start_node}</b></td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
             this.connections.push(end_node);
@@ -115,10 +115,7 @@ class Node{
                 this.menu.css('top', menu_y_adj + menu_y_shift);
             }
 
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            Node.connections.forEach((node_pair)=>{
-                this.drawLine(node_pair[0], node_pair[1]);
-            });
+            Node.drawLines();
         }
     }
 
@@ -135,6 +132,7 @@ class Node{
         this.node.remove();
         this.menu.remove();
         let removeIndex = [];
+        console.table(Node.connections);
         //gather global indices
         for(let i=0 ; i< Node.connections.length; i++){
             if(Node.connections[i][0] == this.id || Node.connections[i][1] == this.id){
@@ -145,10 +143,13 @@ class Node{
         for(let i=0; i< removeIndex.length; i++){
             Node.connections.splice(removeIndex[i],1);
         }
+        console.table(Node.connections);
         //remove from local connections
         for(let i=0; i< this.connections.length; i++){
             nodes[this.connections[i]].removeConnection(this.id);
         }
+        //redraw connections
+        Node.drawLines();
         //remove from global nodes list
         nodes.splice(this.id,1);
     }
@@ -161,18 +162,21 @@ class Node{
         }
     }
 
-    drawLine(start_node, end_node){ //rewrite to be drawLines
-        start_node = $(`#${Node.nodePrefix + start_node}`);
-        end_node = $(`#${Node.nodePrefix + end_node}`);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        let x_start = start_node.position().left + start_node.width()/2;
-        let y_start = start_node.position().top - $('.top-bar').height() + start_node.height()/2;
-        let x_end = end_node.position().left + end_node.width()/2;
-        let y_end = end_node.position().top - $('.top-bar').height() + end_node.height()/2;
-        ctx.moveTo(x_start, y_start);
-        ctx.lineTo(x_end, y_end);
-        ctx.stroke();
+    static drawLines(){
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        Node.connections.forEach((node_pair)=>{
+            let start_node = $(`#${Node.nodePrefix + node_pair[0]}`);
+            let end_node = $(`#${Node.nodePrefix + node_pair[1]}`);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            let x_start = start_node.position().left + start_node.width()/2;
+            let y_start = start_node.position().top - $('.top-bar').height() + start_node.height()/2;
+            let x_end = end_node.position().left + end_node.width()/2;
+            let y_end = end_node.position().top - $('.top-bar').height() + end_node.height()/2;
+            ctx.moveTo(x_start, y_start);
+            ctx.lineTo(x_end, y_end);
+            ctx.stroke();
+        });
     }
 
     placeNode(){
