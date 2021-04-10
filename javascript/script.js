@@ -34,6 +34,7 @@ class Node{
         this.menu_id = Node.menuPrefix + this.id;
         this.connections_id = Node.connectionsPrefix + this.id;
         this.connect_id = Node.connectionPrefix + this.id;
+        this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
         this.connections = [];
         Node.nodes.push(this.id);
@@ -56,6 +57,7 @@ class Node{
         main.on('mousedown', `#${this.node_id}`, this.mousedown.bind(this));
         main.on('mousemove', this.mousemove.bind(this));
         main.on('mouseup', this.mouseup.bind(this));
+        main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
     }
 
     onClick(){
@@ -65,8 +67,8 @@ class Node{
             let end_node = Node.connectingNode.id;
             Node.connections.push([end_node, start_node]);
             Node.drawLines();
-            $(this.connectionRow(this.connections_id, end_node)).appendTo(`#${this.connections_id}`);
-            $(this.connectionRow(Node.connectingNode.connections_id, start_node)).appendTo(`#${Node.connectingNode.connections_id}`);
+            $(this.connectionRow(this.connections_id, end_node, this.weight_id)).appendTo(`#${this.connections_id}`);
+            $(this.connectionRow(Node.connectingNode.connections_id, start_node, Node.connectingNode.weight_id)).appendTo(`#${Node.connectingNode.connections_id}`);
             this.connections.push([end_node, 1]);
             Node.connectingNode.connections.push([start_node, 1]);
             if(this.connections.length > 0){
@@ -143,8 +145,8 @@ class Node{
         Node.connectingNode = this;
     }
 
-    connectionRow(connection_id, node_id){
-        return `<tr id=${connection_id + '_' + node_id}><td>Node <b>${node_id}</b></td><td id='${Node.weightPrefix + node_id}'><input style="width:50px" value='1' type='number' onchange='this.changeWeight()'/></td></tr>`;
+    connectionRow(connection_id, target_id, weight_id){
+        return `<tr id=${connection_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' type='number'/></td></tr>`;
     }
 
     deleteNode(){
@@ -193,8 +195,11 @@ class Node{
         }
     }
 
-    changeWeight(){
-        console.log('testing');
+    changeWeight(event){
+        let id = $(event.target).attr('id');
+        let weight = $(event.target).val();
+        let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
+        //todo
     }
 
     static drawLines(){
