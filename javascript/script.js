@@ -24,6 +24,7 @@ class Node{
     static connectionsPrefix = 'connections_';
     static connectionPrefix = 'connect_';
     static deleteNodePrefix = 'delete_';
+    static weightPrefix = 'weight_';
     static connecting = false;
     static connectingNode = null;
     static connections = [];
@@ -58,15 +59,16 @@ class Node{
     }
 
     onClick(){
-        if(Node.connecting && this.node != Node.connectingNode.node && !Node.connectingNode.connections.includes(this.node_id)){//TODO
+        
+        if(Node.connecting && this.node != Node.connectingNode.node && !this.isInConnections(this.id, Node.connectingNode.connections)){
             let start_node = this.id;
             let end_node = Node.connectingNode.id;
             Node.connections.push([end_node, start_node]);
             Node.drawLines();
-            $(`<tr id=${this.connections_id + '_' + end_node}><td>Node <b>${end_node}</b></td></tr>`).appendTo(`#${this.connections_id}`);
-            $(`<tr id=${Node.connectingNode.connections_id + '_' + start_node}><td>Node <b>${start_node}</b></td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
-            this.connections.push(end_node);
-            Node.connectingNode.connections.push(start_node);
+            $(`<tr id=${this.connections_id + '_' + end_node}><td>Node <b>${end_node}</b></td><td id='${Node.weightPrefix + end_node}'>1</td></tr>`).appendTo(`#${this.connections_id}`);
+            $(`<tr id=${Node.connectingNode.connections_id + '_' + start_node}><td>Node <b>${start_node}</b></td><td id='${Node.weightPrefix + start_node}'>1</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
+            this.connections.push([end_node, 1]);
+            Node.connectingNode.connections.push([start_node, 1]);
             if(this.connections.length > 0){
                 $(`#${'none_' + this.id}`).hide();
             }
@@ -77,7 +79,11 @@ class Node{
             Node.connectingNode = null;
         }
         else{
-            if(!this.wasDragging){
+            if(Node.connecting){
+                Node.connecting = false;
+                Node.connectingNode = null;
+            }
+            else if(!this.wasDragging){
                 this.menu.toggle();
             }
             else{
@@ -123,6 +129,15 @@ class Node{
         this.isDown = false;
     }
 
+    isInConnections(id, connections){
+        for(let i=0; i<connections.length; i++){
+            if(connections[i][0] == id){
+                return true;
+            }
+        }
+        return false;
+    }
+
     addConnection(){
         Node.connecting = true;
         Node.connectingNode = this;
@@ -131,22 +146,23 @@ class Node{
     deleteNode(){
         this.node.remove();
         this.menu.remove();
-        let removeIndex = [];
-        console.table(Node.connections);
+        let removeValues = [];
         //gather global indices
         for(let i=0 ; i< Node.connections.length; i++){
-            if(Node.connections[i][0] == this.id || Node.connections[i][1] == this.id){
-                removeIndex.push(i);
+            if(Node.connections[i][0] == this.id){
+                removeValues.push(Node.connections[i]);
+            }
+            if(Node.connections[i][1] == this.id){
+                removeValues.push(Node.connections[i]);
             }
         }
         //remove index from global connections
-        for(let i=0; i< removeIndex.length; i++){
-            Node.connections.splice(removeIndex[i],1);
+        for(let i=0; i< removeValues.length; i++){
+            Node.connections.splice(Node.connections.indexOf(removeValues[i]),1);
         }
-        console.table(Node.connections);
         //remove from local connections
-        for(let i=0; i< this.connections.length; i++){
-            nodes[this.connections[i]].removeConnection(this.id);
+        for(let i=0; i<this.connections.length; i++){
+            nodes[this.connections[i][0]].removeConnection(this.id);
         }
         //redraw connections
         Node.drawLines();
@@ -155,7 +171,18 @@ class Node{
     }
 
     removeConnection(id){
-        this.connections.splice(this.connections.indexOf(id), 1);
+        let removeValues = [];
+        //indices
+        for(let i=0 ; i < this.connections.length; i++){
+            if(this.connections[i][0] == id){
+                removeValues.push(this.connections[i]);
+            }
+        }
+        //remove index from connections
+        for(let i=0; i< removeValues.length; i++){
+            this.connections.splice(this.connections.indexOf(removeValues[i]),1);
+        }
+
         $(`#${this.connections_id + '_' + id}`).remove();
         if(this.connections.length == 0){
             $(`#none_${this.id}`).show();
@@ -222,12 +249,13 @@ class Node{
                 </thead>
                 <tbody>
                     <tr><td>
-                        <table>
+                        <table colspan=2>
                             <thead>
-                                <th>Connections:</th>
+                                <th colspan=2>Connections:</th>
                             </thead>
                             <tbody id='${this.connections_id}'>
-                                <tr id='none_${this.id}'><td>None</td></tr>
+                                <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
+                                <tr id='none_${this.id}'><td>None</td><td>0</td></tr>
                             </tbody>
                         </table>
                     </td></tr>
@@ -238,13 +266,13 @@ class Node{
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><button id=${this.connect_id}>Connect</button></td>
+                                    <td><button style='width: 100%' id=${this.connect_id}>Connect</button></td>
                                 </tr>
                                 <tr>
-                                    <td><button>Disable</button></td>
+                                    <td><button style='width: 100%'>Disable</button></td>
                                 </tr>
                                 <tr>
-                                    <td><button id=${this.delete_id}>Delete</button></td>
+                                    <td><button style='width: 100%' id=${this.delete_id}>Delete</button></td>
                                 </tr>
                             </tbody>
                         </table>
