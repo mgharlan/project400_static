@@ -65,8 +65,8 @@ class Node{
             let end_node = Node.connectingNode.id;
             Node.connections.push([end_node, start_node]);
             Node.drawLines();
-            $(`<tr id=${this.connections_id + '_' + end_node}><td>Node <b>${end_node}</b></td><td id='${Node.weightPrefix + end_node}'>1</td></tr>`).appendTo(`#${this.connections_id}`);
-            $(`<tr id=${Node.connectingNode.connections_id + '_' + start_node}><td>Node <b>${start_node}</b></td><td id='${Node.weightPrefix + start_node}'>1</td></tr>`).appendTo(`#${Node.connectingNode.connections_id}`);
+            $(this.connectionRow(this.connections_id, end_node)).appendTo(`#${this.connections_id}`);
+            $(this.connectionRow(Node.connectingNode.connections_id, start_node)).appendTo(`#${Node.connectingNode.connections_id}`);
             this.connections.push([end_node, 1]);
             Node.connectingNode.connections.push([start_node, 1]);
             if(this.connections.length > 0){
@@ -143,6 +143,10 @@ class Node{
         Node.connectingNode = this;
     }
 
+    connectionRow(connection_id, node_id){
+        return `<tr id=${connection_id + '_' + node_id}><td>Node <b>${node_id}</b></td><td id='${Node.weightPrefix + node_id}'><input style="width:50px" value='1' type='number' onchange='this.changeWeight()'/></td></tr>`;
+    }
+
     deleteNode(){
         this.node.remove();
         this.menu.remove();
@@ -187,6 +191,10 @@ class Node{
         if(this.connections.length == 0){
             $(`#none_${this.id}`).show();
         }
+    }
+
+    changeWeight(){
+        console.log('testing');
     }
 
     static drawLines(){
@@ -255,7 +263,7 @@ class Node{
                             </thead>
                             <tbody id='${this.connections_id}'>
                                 <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
-                                <tr id='none_${this.id}'><td>None</td><td>0</td></tr>
+                                <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type=number value=0 disabled/></td></tr>
                             </tbody>
                         </table>
                     </td></tr>
