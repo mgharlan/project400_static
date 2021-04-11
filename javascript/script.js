@@ -17,6 +17,7 @@ function addNode(){
 class Node{
     static count = 0;
     static nodes = {};
+    static nodeNames = [];
     static nodePrefix = 'node_';
     static menuPrefix = 'menu_';
     static connectionsPrefix = 'connections_';
@@ -284,7 +285,58 @@ class Node{
     };
 }
 
+function getNextNode(Q, dist){
+    let v = Number.MAX_VALUE;
+    let v_node = null;
+    for(let i =0; i< Q.length; i++){
+        if(v > dist[Q[i]]){
+            v_node = Q[i];
+            v = dist[Q[i]];
+        }
+    }
+    console.log('in get next');
+    console.table(Q);
+    console.table(dist);
+    console.log(v);
+    return v_node;
+}
+
 function SPF(){
-    console.log('Calculating');
-    dist = {};
+    for(const[node_id, currentNode] of Object.entries(Node.nodes)){
+        let dist = {};
+        let previous = {};
+        let Q = [];
+        //setup inial objects
+        for(const [key, value] of Object.entries(Node.nodes)){
+            dist[key] = Number.MAX_VALUE;
+            previous[key] = undefined;
+            Q.push(key);
+        }
+        //setup initial state for the current node
+        dist[node_id] = 0;
+        previous[node_id] = node_id;
+
+        while(Q.length != 0){
+            let u = getNextNode(Q, dist);
+            Q.splice(Q.indexOf(u), 1);
+            
+            if( u !== null){
+                console.log('node: ', u);
+                console.log('Q: ', Q);
+                for(const[neighbor, weight] of Object.entries(Node.nodes[u].connections)){
+                    if(Q.includes(neighbor)){
+                        console.log(neighbor);
+                        let alt = dist[u] + weight;
+                        if(alt < dist[neighbor]){
+                            dist[neighbor] = alt;
+                            previous[neighbor] = u;
+                        }
+                    }
+                    console.table(dist);
+                }
+            }
+        }
+        currentNode.distances = dist;
+        currentNode.path = previous;
+    }
 }
