@@ -138,7 +138,7 @@ class Node{
     }
 
     connectionRow(connection_id, target_id, weight_id){
-        return `<tr id=${connection_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' type='number'/></td></tr>`;
+        return `<tr id=${connection_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td></tr>`;
     }
 
     deleteNode(){
@@ -184,6 +184,10 @@ class Node{
         let id = $(event.target).attr('id');
         let weight = $(event.target).val();
         let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
+
+        this.connections[target_id] = parseInt(weight);
+        Node.nodes[target_id].connections[this.id] = parseInt(weight);
+        $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
     }
 
     static drawLines(){
@@ -252,7 +256,7 @@ class Node{
                             </thead>
                             <tbody id='${this.connections_id}'>
                                 <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
-                                <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type=number value=0 disabled/></td></tr>
+                                <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type='number' min='0' value=0 disabled/></td></tr>
                             </tbody>
                         </table>
                     </td></tr>
@@ -281,5 +285,6 @@ class Node{
 }
 
 function SPF(){
+    console.log('Calculating');
     dist = {};
 }
