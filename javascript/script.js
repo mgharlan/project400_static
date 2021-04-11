@@ -1,6 +1,5 @@
 let main = null;
 let ctx = null;
-let nodes = [];
 
 $().ready(function(){
     main = $('#main');
@@ -12,13 +11,12 @@ $().ready(function(){
 });
 
 function addNode(){
-    let newNode = new Node();
-    nodes[`${newNode.id}`] = newNode;
+    new Node();
 }
 
 class Node{
     static count = 0;
-    static nodes = [];
+    static nodes = {};
     static nodePrefix = 'node_';
     static menuPrefix = 'menu_';
     static connectionsPrefix = 'connections_';
@@ -37,7 +35,7 @@ class Node{
         this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
         this.connections = [];
-        Node.nodes.push(this.id);
+        Node.nodes[this.id] = this;
         
         this.placeNode();
 
@@ -168,12 +166,12 @@ class Node{
         }
         //remove from local connections
         for(let i=0; i<this.connections.length; i++){
-            nodes[this.connections[i][0]].removeConnection(this.id);
+            Node.nodes[this.connections[i][0]].removeConnection(this.id);
         }
         //redraw connections
         Node.drawLines();
         //remove from global nodes list
-        nodes.splice(this.id,1);
+        delete Node.nodes[this.id];
     }
 
     removeConnection(id){
@@ -199,7 +197,6 @@ class Node{
         let id = $(event.target).attr('id');
         let weight = $(event.target).val();
         let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
-        //todo
     }
 
     static drawLines(){
@@ -297,10 +294,5 @@ class Node{
 }
 
 function SPF(){
-    console.log(nodes);
-    console.log(Node.connections);
-    let distances = [];
-    /*nodes.forEach(function(element){
-        distances.push(element.id);
-    });*/
+    dist = {};
 }
