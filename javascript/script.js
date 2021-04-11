@@ -34,7 +34,8 @@ class Node{
         this.connect_id = Node.connectionPrefix + this.id;
         this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
-        this.connections = [];
+        this.connections = {};
+        this.connections.length = 0;
         Node.nodes[this.id] = this;
         
         this.placeNode();
@@ -60,15 +61,17 @@ class Node{
 
     onClick(){
         
-        if(Node.connecting && this.node != Node.connectingNode.node && !this.isInConnections(this.id, Node.connectingNode.connections)){
+        if(Node.connecting && this.node != Node.connectingNode.node && !(this.id in Node.connectingNode.connections)){
             let start_node = this.id;
             let end_node = Node.connectingNode.id;
             Node.connections.push([end_node, start_node]);
             Node.drawLines();
             $(this.connectionRow(this.connections_id, end_node, this.weight_id)).appendTo(`#${this.connections_id}`);
             $(this.connectionRow(Node.connectingNode.connections_id, start_node, Node.connectingNode.weight_id)).appendTo(`#${Node.connectingNode.connections_id}`);
-            this.connections.push([end_node, 1]);
-            Node.connectingNode.connections.push([start_node, 1]);
+            this.connections[end_node] = 1;
+            this.connections.length++;
+            Node.connectingNode.connections[start_node] = 1;
+            Node.connectingNode.connections.length++;
             if(this.connections.length > 0){
                 $(`#${'none_' + this.id}`).hide();
             }
@@ -129,15 +132,6 @@ class Node{
         this.isDown = false;
     }
 
-    isInConnections(id, connections){
-        for(let i=0; i<connections.length; i++){
-            if(connections[i][0] == id){
-                return true;
-            }
-        }
-        return false;
-    }
-
     addConnection(){
         Node.connecting = true;
         Node.connectingNode = this;
@@ -165,8 +159,10 @@ class Node{
             Node.connections.splice(Node.connections.indexOf(removeValues[i]),1);
         }
         //remove from local connections
-        for(let i=0; i<this.connections.length; i++){
-            Node.nodes[this.connections[i][0]].removeConnection(this.id);
+        for(const[key, value] of Object.entries(this.connections)){
+            if(key != 'length'){
+                Node.nodes[key].removeConnection(this.id);
+            }
         }
         //redraw connections
         Node.drawLines();
@@ -175,17 +171,8 @@ class Node{
     }
 
     removeConnection(id){
-        let removeValues = [];
-        //indices
-        for(let i=0 ; i < this.connections.length; i++){
-            if(this.connections[i][0] == id){
-                removeValues.push(this.connections[i]);
-            }
-        }
-        //remove index from connections
-        for(let i=0; i< removeValues.length; i++){
-            this.connections.splice(this.connections.indexOf(removeValues[i]),1);
-        }
+        delete this.connections[id];
+        this.connections.length--;
 
         $(`#${this.connections_id + '_' + id}`).remove();
         if(this.connections.length == 0){
