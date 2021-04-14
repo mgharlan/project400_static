@@ -26,3 +26,19 @@ table, th, td {
     text-align: center;
     font-size: 12px;
   }
+
+.next, .previous{
+    display:inline-block;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    padding: 0px;
+    font-size: 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.next:focus, .previous,:focus{
+    outline: none;
+    box-shadow: none;
+}

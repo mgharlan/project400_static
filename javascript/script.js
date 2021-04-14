@@ -24,6 +24,7 @@ class Node{
     static connectionPrefix = 'connect_';
     static deleteNodePrefix = 'delete_';
     static weightPrefix = 'weight_';
+    static nextPrefix = 'next_';
     static connecting = false;
     static connectingNode = null;
     static connections = [];
@@ -35,6 +36,7 @@ class Node{
         this.connect_id = Node.connectionPrefix + this.id;
         this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
+        this.next_id = Node.nextPrefix + this.id;
         this.connections = {};
         this.connections.length = 0;
         Node.nodes[this.id] = this;
@@ -58,6 +60,7 @@ class Node{
         main.on('mousemove', this.mousemove.bind(this));
         main.on('mouseup', this.mouseup.bind(this));
         main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
+        main.on('click', `#${this.next_id}`, this.showPathTable.bind(this));
     }
 
     onClick(){
@@ -131,6 +134,11 @@ class Node{
 
     mouseup(){
         this.isDown = false;
+    }
+    
+    showPathTable(){
+        console.log(this.id);
+        console.log('next');
     }
 
     addConnection(){
@@ -250,10 +258,10 @@ class Node{
                     <th>Node ${this.id}</th>
                 </thead>
                 <tbody>
-                    <tr><td>
+                    <tr ${'table_' + this.connections_id}><td>
                         <table colspan=2>
                             <thead>
-                                <th colspan=2>Connections:</th>
+                                <th colspan=2>Connections: <button class='next' id='${this.next_id}' >></button></th>
                             </thead>
                             <tbody id='${this.connections_id}'>
                                 <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
@@ -294,10 +302,6 @@ function getNextNode(Q, dist){
             v = dist[Q[i]];
         }
     }
-    console.log('in get next');
-    console.table(Q);
-    console.table(dist);
-    console.log(v);
     return v_node;
 }
 
