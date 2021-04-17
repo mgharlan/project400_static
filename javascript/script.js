@@ -25,6 +25,8 @@ class Node{
     static deleteNodePrefix = 'delete_';
     static weightPrefix = 'weight_';
     static nextPrefix = 'next_';
+    static previousPrefix = 'previous_';
+    static pathPrefix = 'paths_';
     static connecting = false;
     static connectingNode = null;
     static connections = [];
@@ -37,6 +39,8 @@ class Node{
         this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
         this.next_id = Node.nextPrefix + this.id;
+        this.previous_id = Node.previousPrefix + this.id;
+        this.paths_id = Node.pathPrefix + this.id;
         this.connections = {};
         this.connections.length = 0;
         Node.nodes[this.id] = this;
@@ -61,6 +65,7 @@ class Node{
         main.on('mouseup', this.mouseup.bind(this));
         main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
         main.on('click', `#${this.next_id}`, this.showPathTable.bind(this));
+        main.on('click', `#${this.previous_id}`, this.showConnectionTable.bind(this));
     }
 
     onClick(){
@@ -82,6 +87,9 @@ class Node{
             if(Node.connectingNode.connections.length > 0){
                 $(`#${'none_' + Node.connectingNode.id}`).hide();
             }
+            Node.SPF();
+            this.updateTable();
+            Node.connectingNode.updateTable();
             Node.connecting = false;
             Node.connectingNode = null;
         }
@@ -137,13 +145,39 @@ class Node{
     }
     
     showPathTable(){
-        console.log(this.id);
-        console.log('next');
+        $(`#table_${this.connections_id}`).hide();
+        $(`#table_${this.paths_id}`).show();
+    }
+    
+    showConnectionTable(){
+        $(`#table_${this.connections_id}`).show();
+        $(`#table_${this.paths_id}`).hide();
     }
 
     addConnection(){
         Node.connecting = true;
         Node.connectingNode = this;
+    }
+    
+    updateTable(){
+        for(let i = 0; i<this.distances.length; i++){
+            if($(`#${this.paths_id + '_' + i}`).length){
+                console.log('testing');
+                $(`#${this.paths_id + '_' + i}`).destroy();
+                $(this.pathRow(this.paths_id, i, this.distances[i], this.path[i])).appendTo(`#${this.paths_id}`);
+            }
+            else{
+                console.log('testing1');
+                $(this.pathRow(this.paths_id, i, this.distances[i], this.path[i])).appendTo(`#${this.paths_id}`);
+            }
+        } 
+        console.table(this.distances); 
+        console.table(this.path);
+    }
+
+    pathRow(paths_id, target, distance, forward){
+        return `<tr id='${paths_id + '_' + target}'><td>${target}</td><td>${distance}</td><td>${forward}</td></tr>`;
+
     }
 
     connectionRow(connection_id, target_id, weight_id){
@@ -258,14 +292,23 @@ class Node{
                     <th>Node ${this.id}</th>
                 </thead>
                 <tbody>
-                    <tr ${'table_' + this.connections_id}><td>
-                        <table colspan=2>
+                    <tr><td>
+                        <table id='${'table_' + this.connections_id}' colspan=2>
                             <thead>
                                 <th colspan=2>Connections: <button class='next' id='${this.next_id}' >></button></th>
                             </thead>
                             <tbody id='${this.connections_id}'>
                                 <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
                                 <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type='number' min='0' value=0 disabled/></td></tr>
+                            </tbody>
+                        </table>
+                        <table id='${'table_' + this.paths_id}' style="display: none;" colspan=3>
+                            <thead>
+                                <th colspan=3><button class='previous' id='${this.previous_id}'><</button> Paths:</th>
+                            </thead>
+                            <tbody id='${this.paths_id}'>
+                                <tr><td><b>Node</b></td><td><b>Distance</b></td><td><b>Forward</b></td></tr>
+                                <tr id='${this.paths_id + '_' + this.id}'><td>${this.id}</td><td>0</td><td>${this.id}</td></tr>
                             </tbody>
                         </table>
                     </td></tr>
@@ -291,56 +334,53 @@ class Node{
             </table>
         </div>`
     };
-}
 
-function getNextNode(Q, dist){
-    let v = Number.MAX_VALUE;
-    let v_node = null;
-    for(let i =0; i< Q.length; i++){
-        if(v > dist[Q[i]]){
-            v_node = Q[i];
-            v = dist[Q[i]];
-        }
-    }
-    return v_node;
-}
-
-function SPF(){
-    for(const[node_id, currentNode] of Object.entries(Node.nodes)){
-        let dist = {};
-        let previous = {};
-        let Q = [];
-        //setup inial objects
-        for(const [key, value] of Object.entries(Node.nodes)){
-            dist[key] = Number.MAX_VALUE;
-            previous[key] = undefined;
-            Q.push(key);
-        }
-        //setup initial state for the current node
-        dist[node_id] = 0;
-        previous[node_id] = node_id;
-
-        while(Q.length != 0){
-            let u = getNextNode(Q, dist);
-            Q.splice(Q.indexOf(u), 1);
-            
-            if( u !== null){
-                console.log('node: ', u);
-                console.log('Q: ', Q);
-                for(const[neighbor, weight] of Object.entries(Node.nodes[u].connections)){
-                    if(Q.includes(neighbor)){
-                        console.log(neighbor);
-                        let alt = dist[u] + weight;
-                        if(alt < dist[neighbor]){
-                            dist[neighbor] = alt;
-                            previous[neighbor] = u;
-                        }
-                    }
-                    console.table(dist);
-                }
+    static getNextNode(Q, dist){
+        let v = Number.MAX_VALUE;
+        let v_node = null;
+        for(let i =0; i< Q.length; i++){
+            if(v > dist[Q[i]]){
+                v_node = Q[i];
+                v = dist[Q[i]];
             }
         }
-        currentNode.distances = dist;
-        currentNode.path = previous;
+        return v_node;
+    }
+
+    static SPF(){
+        for(const[node_id, currentNode] of Object.entries(Node.nodes)){
+            let dist = {};
+            let previous = {};
+            let Q = [];
+            //setup inial objects
+            for(const [key, value] of Object.entries(Node.nodes)){
+                dist[key] = Number.MAX_VALUE;
+                previous[key] = undefined;
+                Q.push(key);
+            }
+            //setup initial state for the current node
+            dist[node_id] = 0;
+            previous[node_id] = node_id;
+
+            while(Q.length != 0){
+                let u = Node.getNextNode(Q, dist);
+                Q.splice(Q.indexOf(u), 1);
+                
+                if( u !== null){
+                    for(const[neighbor, weight] of Object.entries(Node.nodes[u].connections)){
+                        if(Q.includes(neighbor)){
+                            let alt = dist[u] + weight;
+                            if(alt < dist[neighbor]){
+                                dist[neighbor] = alt;
+                                previous[neighbor] = u;
+                            }
+                        }
+                    }
+                }
+            }
+            currentNode.distances = dist;
+            currentNode.path = previous;
+        }
     }
 }
+
