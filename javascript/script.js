@@ -160,17 +160,15 @@ class Node{
     }
     
     updateTable(){
-        for(let i = 0; i<this.distances.length; i++){
-            if($(`#${this.paths_id + '_' + i}`).length){
-                console.log('testing');
-                $(`#${this.paths_id + '_' + i}`).destroy();
-                $(this.pathRow(this.paths_id, i, this.distances[i], this.path[i])).appendTo(`#${this.paths_id}`);
-            }
-            else{
-                console.log('testing1');
-                $(this.pathRow(this.paths_id, i, this.distances[i], this.path[i])).appendTo(`#${this.paths_id}`);
+        for(const[target, distance] of Object.entries(this.connections)){
+            if(target != 'length'){
+                if($(`#${this.paths_id + '_' + target}`).length){
+                    $(`#${this.paths_id + '_' + target}`).remove();
+                }
+                $(this.pathRow(this.paths_id, target, distance, this.path[target])).appendTo(`#${this.paths_id}`);
             }
         } 
+        console.log(this.id);
         console.table(this.distances); 
         console.table(this.path);
     }
@@ -349,6 +347,8 @@ class Node{
 
     static SPF(){
         for(const[node_id, currentNode] of Object.entries(Node.nodes)){
+            //let node_id = Node.nodes[0].id;
+            //let currentNode = Node.nodes[0];
             let dist = {};
             let previous = {};
             let Q = [];
@@ -372,7 +372,12 @@ class Node{
                             let alt = dist[u] + weight;
                             if(alt < dist[neighbor]){
                                 dist[neighbor] = alt;
-                                previous[neighbor] = u;
+                                if(u == node_id){
+                                    previous[neighbor] = neighbor;
+                                }
+                                else{
+                                    previous[neighbor] = u;
+                                }
                             }
                         }
                     }
@@ -380,6 +385,10 @@ class Node{
             }
             currentNode.distances = dist;
             currentNode.path = previous;
+
+            console.log(currentNode.id);
+            console.log(dist);
+            console.log(previous);
         }
     }
 }
