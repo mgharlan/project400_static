@@ -88,8 +88,9 @@ class Node{
                 $(`#${'none_' + Node.connectingNode.id}`).hide();
             }
             Node.SPF();
-            this.updateTable();
-            Node.connectingNode.updateTable();
+            for(const[target, node] of Object.entries(Node.nodes)){
+                node.updateTable();
+            }
             Node.connecting = false;
             Node.connectingNode = null;
         }
@@ -160,17 +161,12 @@ class Node{
     }
     
     updateTable(){
-        for(const[target, distance] of Object.entries(this.connections)){
-            if(target != 'length'){
-                if($(`#${this.paths_id + '_' + target}`).length){
-                    $(`#${this.paths_id + '_' + target}`).remove();
-                }
-                $(this.pathRow(this.paths_id, target, distance, this.path[target])).appendTo(`#${this.paths_id}`);
+        for(const[target, node] of Object.entries(Node.nodes)){
+            if($(`#${this.paths_id + '_' + target}`).length){
+                $(`#${this.paths_id + '_' + target}`).remove();
             }
+            $(this.pathRow(this.paths_id, target, (this.distances[target] == Number.MAX_VALUE) ? 'Unreachable' : this.distances[target],  (this.distances[target] == Number.MAX_VALUE) ? 'NA' : this.forwarding[target])).appendTo(`#${this.paths_id}`);
         } 
-        console.log(this.id);
-        console.table(this.distances); 
-        console.table(this.path);
     }
 
     pathRow(paths_id, target, distance, forward){
@@ -207,6 +203,11 @@ class Node{
         }
         //redraw connections
         Node.drawLines();
+        //remove table entries and recalculate
+        Node.SPF();
+        for(const[target, node] of Object.entries(Node.nodes)){
+            node.updateTable();
+        }
         //remove from global nodes list
         delete Node.nodes[this.id];
     }
@@ -333,6 +334,22 @@ class Node{
         </div>`
     };
 
+    createForwardingTable(){
+        this.forwarding = {};
+        for(const[target, step] of Object.entries(this.path)){
+            let targ = target;
+            let hop = step;
+            this.forwarding[target] = "";
+            while(targ != hop){
+                this.forwarding[target] += hop;
+                targ = hop;
+                hop = this.path[hop];
+            }
+            this.forwarding[target] += (this.forwarding[target].includes(hop)) ? "" : hop;
+            this.forwarding[target] = this.forwarding[target].split("").reverse().join("");
+        }
+    }
+
     static getNextNode(Q, dist){
         let v = Number.MAX_VALUE;
         let v_node = null;
@@ -385,10 +402,7 @@ class Node{
             }
             currentNode.distances = dist;
             currentNode.path = previous;
-
-            console.log(currentNode.id);
-            console.log(dist);
-            console.log(previous);
+            currentNode.createForwardingTable();
         }
     }
 }
