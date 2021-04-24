@@ -27,6 +27,7 @@ class Node{
     static nextPrefix = 'next_';
     static previousPrefix = 'previous_';
     static pathPrefix = 'paths_';
+    static disablePrefix = 'disable_';
     static linking = false;
     static linkingNode = null;
     static links = [];
@@ -41,8 +42,10 @@ class Node{
         this.next_id = Node.nextPrefix + this.id;
         this.previous_id = Node.previousPrefix + this.id;
         this.paths_id = Node.pathPrefix + this.id;
+        this.disable_id = Node.disablePrefix + this.id;
         this.links = {};
         this.links.length = 0;
+        this.disabled = false;
         Node.nodes[this.id] = this;
         
         this.placeNode();
@@ -66,6 +69,7 @@ class Node{
         main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
         main.on('click', `#${this.next_id}`, this.showPathTable.bind(this));
         main.on('click', `#${this.previous_id}`, this.showlinkTable.bind(this));
+        main.on('click', `#${this.disable_id}`, this.toggleNode.bind(this));
     }
 
     onClick(){
@@ -153,6 +157,19 @@ class Node{
     showlinkTable(){
         $(`#table_${this.links_id}`).show();
         $(`#table_${this.paths_id}`).hide();
+    }
+
+    toggleNode(){
+        if(this.disabled){
+            this.disabled = false;
+            $(`#${this.node_id}`).removeClass('disabled');
+            $(`#${this.disable_id}`).html('Disable')
+        }
+        else{
+            this.disabled = true;
+            $(`#${this.node_id}`).addClass('disabled');
+            $(`#${this.disable_id}`).html('Enable')
+        }
     }
 
     addlink(){
@@ -302,11 +319,16 @@ class Node{
                     <tr><td>
                         <table id='${'table_' + this.links_id}' colspan=2>
                             <thead>
-                                <th colspan=2>Links: <button class='next' id='${this.next_id}' >></button></th>
+                                <th colspan=4>Links: <button class='next' id='${this.next_id}' >></button></th>
                             </thead>
                             <tbody id='${this.links_id}'>
-                                <tr><td><b>Link</b></td><td><b>Weight</b></td></tr>
-                                <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type='number' min='0' value=0 disabled/></td></tr>
+                                <tr><td><b>Link</b></td><td><b>Weight</b></td><td><b>Toggle</b></td><td><b>Delete</b></td></tr>
+                                <tr id='none_${this.id}'>
+                                    <td>None</td>
+                                    <td><input style="width: 50px" type='number' min='0' value=0 disabled/></td>
+                                    <td><button style='width: 100%' disabled>-</button></td>
+                                    <td><button style='width: 100%' disabled>x</button></td>
+                                </tr>
                             </tbody>
                         </table>
                         <table id='${'table_' + this.paths_id}' style="display: none;" colspan=3>
@@ -329,7 +351,7 @@ class Node{
                                     <td><button style='width: 100%' id=${this.connect_id}>Connect</button></td>
                                 </tr>
                                 <tr>
-                                    <td><button style='width: 100%'>Disable</button></td>
+                                    <td><button id='${this.disable_id}' style='width: 100%'>Disable</button></td>
                                 </tr>
                                 <tr>
                                     <td><button style='width: 100%' id=${this.delete_id}>Delete</button></td>

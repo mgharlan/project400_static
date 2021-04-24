@@ -38,7 +38,7 @@ table, th, td {
     vertical-align: middle;
 }
 
-.next:focus, .previous,:focus{
+.next:focus, .previous:focus{
     outline: none;
     box-shadow: none;
 }
