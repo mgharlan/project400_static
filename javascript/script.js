@@ -20,29 +20,29 @@ class Node{
     static nodeNames = [];
     static nodePrefix = 'node_';
     static menuPrefix = 'menu_';
-    static connectionsPrefix = 'connections_';
-    static connectionPrefix = 'connect_';
+    static linksPrefix = 'links_';
+    static linkPrefix = 'connect_';
     static deleteNodePrefix = 'delete_';
     static weightPrefix = 'weight_';
     static nextPrefix = 'next_';
     static previousPrefix = 'previous_';
     static pathPrefix = 'paths_';
-    static connecting = false;
-    static connectingNode = null;
-    static connections = [];
+    static linking = false;
+    static linkingNode = null;
+    static links = [];
     constructor(){
         this.id = Node.count;
         this.node_id = Node.nodePrefix + this.id;
         this.menu_id = Node.menuPrefix + this.id;
-        this.connections_id = Node.connectionsPrefix + this.id;
-        this.connect_id = Node.connectionPrefix + this.id;
+        this.links_id = Node.linksPrefix + this.id;
+        this.connect_id = Node.linkPrefix + this.id;
         this.weight_id = Node.weightPrefix + this.id;
         this.delete_id = Node.deleteNodePrefix + this.id;
         this.next_id = Node.nextPrefix + this.id;
         this.previous_id = Node.previousPrefix + this.id;
         this.paths_id = Node.pathPrefix + this.id;
-        this.connections = {};
-        this.connections.length = 0;
+        this.links = {};
+        this.links.length = 0;
         Node.nodes[this.id] = this;
         
         this.placeNode();
@@ -57,7 +57,7 @@ class Node{
     subscribeEvents(){
         this.node.on('click', this.onClick.bind(this)); 
 
-        $(`#${this.connect_id}`).on('click', this.addConnection.bind(this));
+        $(`#${this.connect_id}`).on('click', this.addlink.bind(this));
         $(`#${this.delete_id}`).on('click', this.deleteNode.bind(this));
 
         main.on('mousedown', `#${this.node_id}`, this.mousedown.bind(this));
@@ -65,39 +65,39 @@ class Node{
         main.on('mouseup', this.mouseup.bind(this));
         main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
         main.on('click', `#${this.next_id}`, this.showPathTable.bind(this));
-        main.on('click', `#${this.previous_id}`, this.showConnectionTable.bind(this));
+        main.on('click', `#${this.previous_id}`, this.showlinkTable.bind(this));
     }
 
     onClick(){
         
-        if(Node.connecting && this.node != Node.connectingNode.node && !(this.id in Node.connectingNode.connections)){
+        if(Node.linking && this.node != Node.linkingNode.node && !(this.id in Node.linkingNode.links)){
             let start_node = this.id;
-            let end_node = Node.connectingNode.id;
-            Node.connections.push([end_node, start_node]);
+            let end_node = Node.linkingNode.id;
+            Node.links.push([end_node, start_node]);
             Node.drawLines();
-            $(this.connectionRow(this.connections_id, end_node, this.weight_id)).appendTo(`#${this.connections_id}`);
-            $(this.connectionRow(Node.connectingNode.connections_id, start_node, Node.connectingNode.weight_id)).appendTo(`#${Node.connectingNode.connections_id}`);
-            this.connections[end_node] = 1;
-            this.connections.length++;
-            Node.connectingNode.connections[start_node] = 1;
-            Node.connectingNode.connections.length++;
-            if(this.connections.length > 0){
+            $(this.linkRow(this.links_id, end_node, this.weight_id)).appendTo(`#${this.links_id}`);
+            $(this.linkRow(Node.linkingNode.links_id, start_node, Node.linkingNode.weight_id)).appendTo(`#${Node.linkingNode.links_id}`);
+            this.links[end_node] = 1;
+            this.links.length++;
+            Node.linkingNode.links[start_node] = 1;
+            Node.linkingNode.links.length++;
+            if(this.links.length > 0){
                 $(`#${'none_' + this.id}`).hide();
             }
-            if(Node.connectingNode.connections.length > 0){
-                $(`#${'none_' + Node.connectingNode.id}`).hide();
+            if(Node.linkingNode.links.length > 0){
+                $(`#${'none_' + Node.linkingNode.id}`).hide();
             }
             Node.SPF();
             for(const[target, node] of Object.entries(Node.nodes)){
                 node.updateTable();
             }
-            Node.connecting = false;
-            Node.connectingNode = null;
+            Node.linking = false;
+            Node.linkingNode = null;
         }
         else{
-            if(Node.connecting){
-                Node.connecting = false;
-                Node.connectingNode = null;
+            if(Node.linking){
+                Node.linking = false;
+                Node.linkingNode = null;
             }
             else if(!this.wasDragging){
                 this.menu.toggle();
@@ -146,18 +146,18 @@ class Node{
     }
     
     showPathTable(){
-        $(`#table_${this.connections_id}`).hide();
+        $(`#table_${this.links_id}`).hide();
         $(`#table_${this.paths_id}`).show();
     }
     
-    showConnectionTable(){
-        $(`#table_${this.connections_id}`).show();
+    showlinkTable(){
+        $(`#table_${this.links_id}`).show();
         $(`#table_${this.paths_id}`).hide();
     }
 
-    addConnection(){
-        Node.connecting = true;
-        Node.connectingNode = this;
+    addlink(){
+        Node.linking = true;
+        Node.linkingNode = this;
     }
     
     updateTable(){
@@ -174,8 +174,8 @@ class Node{
 
     }
 
-    connectionRow(connection_id, target_id, weight_id){
-        return `<tr id=${connection_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td></tr>`;
+    linkRow(link_id, target_id, weight_id){
+        return `<tr id=${link_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td></tr>`;
     }
 
     deleteNode(){
@@ -183,25 +183,25 @@ class Node{
         this.menu.remove();
         let removeValues = [];
         //gather global indices
-        for(let i=0 ; i< Node.connections.length; i++){
-            if(Node.connections[i][0] == this.id){
-                removeValues.push(Node.connections[i]);
+        for(let i=0 ; i< Node.links.length; i++){
+            if(Node.links[i][0] == this.id){
+                removeValues.push(Node.links[i]);
             }
-            if(Node.connections[i][1] == this.id){
-                removeValues.push(Node.connections[i]);
+            if(Node.links[i][1] == this.id){
+                removeValues.push(Node.links[i]);
             }
         }
-        //remove index from global connections
+        //remove index from global links
         for(let i=0; i< removeValues.length; i++){
-            Node.connections.splice(Node.connections.indexOf(removeValues[i]),1);
+            Node.links.splice(Node.links.indexOf(removeValues[i]),1);
         }
-        //remove from local connections
-        for(const[key, value] of Object.entries(this.connections)){
+        //remove from local links
+        for(const[key, value] of Object.entries(this.links)){
             if(key != 'length'){
-                Node.nodes[key].removeConnection(this.id);
+                Node.nodes[key].removelink(this.id);
             }
         }
-        //redraw connections
+        //redraw links
         Node.drawLines();
         //remove table entries and recalculate
         Node.SPF();
@@ -212,12 +212,12 @@ class Node{
         delete Node.nodes[this.id];
     }
 
-    removeConnection(id){
-        delete this.connections[id];
-        this.connections.length--;
+    removelink(id){
+        delete this.links[id];
+        this.links.length--;
 
-        $(`#${this.connections_id + '_' + id}`).remove();
-        if(this.connections.length == 0){
+        $(`#${this.links_id + '_' + id}`).remove();
+        if(this.links.length == 0){
             $(`#none_${this.id}`).show();
         }
     }
@@ -227,14 +227,14 @@ class Node{
         let weight = $(event.target).val();
         let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
 
-        this.connections[target_id] = parseInt(weight);
-        Node.nodes[target_id].connections[this.id] = parseInt(weight);
+        this.links[target_id] = parseInt(weight);
+        Node.nodes[target_id].links[this.id] = parseInt(weight);
         $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
     }
 
     static drawLines(){
         ctx.clearRect(0,0, canvas.width, canvas.height);
-        Node.connections.forEach((node_pair)=>{
+        Node.links.forEach((node_pair)=>{
             let start_node = $(`#${Node.nodePrefix + node_pair[0]}`);
             let end_node = $(`#${Node.nodePrefix + node_pair[1]}`);
             ctx.lineWidth = 1;
@@ -292,12 +292,12 @@ class Node{
                 </thead>
                 <tbody>
                     <tr><td>
-                        <table id='${'table_' + this.connections_id}' colspan=2>
+                        <table id='${'table_' + this.links_id}' colspan=2>
                             <thead>
-                                <th colspan=2>Connections: <button class='next' id='${this.next_id}' >></button></th>
+                                <th colspan=2>Links: <button class='next' id='${this.next_id}' >></button></th>
                             </thead>
-                            <tbody id='${this.connections_id}'>
-                                <tr><td><b>Connection</b></td><td><b>Weight</b></td></tr>
+                            <tbody id='${this.links_id}'>
+                                <tr><td><b>Link</b></td><td><b>Weight</b></td></tr>
                                 <tr id='none_${this.id}'><td>None</td><td><input style="width: 50px" type='number' min='0' value=0 disabled/></td></tr>
                             </tbody>
                         </table>
@@ -384,7 +384,7 @@ class Node{
                 Q.splice(Q.indexOf(u), 1);
                 
                 if( u !== null){
-                    for(const[neighbor, weight] of Object.entries(Node.nodes[u].connections)){
+                    for(const[neighbor, weight] of Object.entries(Node.nodes[u].links)){
                         if(Q.includes(neighbor)){
                             let alt = dist[u] + weight;
                             if(alt < dist[neighbor]){
