@@ -378,7 +378,7 @@ class Node{
         for(const[target, step] of Object.entries(this.path)){
             let targ = target;
             let hop = step;
-            this.forwarding[target] = "";
+            this.forwarding[target] = targ;
             while(targ != hop){
                 this.forwarding[target] += hop;
                 targ = hop;
