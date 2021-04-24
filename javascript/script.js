@@ -28,6 +28,8 @@ class Node{
     static previousPrefix = 'previous_';
     static pathPrefix = 'paths_';
     static disablePrefix = 'disable_';
+    static toggleLinkPrefix = 'toggleLink_';
+    static deleteLinkPrefix = 'deleteLink_';
     static linking = false;
     static linkingNode = null;
     static links = [];
@@ -43,6 +45,8 @@ class Node{
         this.previous_id = Node.previousPrefix + this.id;
         this.paths_id = Node.pathPrefix + this.id;
         this.disable_id = Node.disablePrefix + this.id;
+        this.toggleLink_id = Node.toggleLinkPrefix + this.id;
+        this.deleteLink_id = Node.deleteLinkPrefix + this.id;
         this.links = {};
         this.links.length = 0;
         this.disabled = false;
@@ -67,6 +71,8 @@ class Node{
         main.on('mousemove', this.mousemove.bind(this));
         main.on('mouseup', this.mouseup.bind(this));
         main.on('change', `.${this.weight_id}`, this.changeWeight.bind(this));
+        main.on('click', `.${this.toggleLink_id}`, this.toggleLink.bind(this));
+        main.on('click', `.${this.deleteLink_id}`, this.deleteLink.bind(this));
         main.on('click', `#${this.next_id}`, this.showPathTable.bind(this));
         main.on('click', `#${this.previous_id}`, this.showlinkTable.bind(this));
         main.on('click', `#${this.disable_id}`, this.toggleNode.bind(this));
@@ -79,8 +85,8 @@ class Node{
             let end_node = Node.linkingNode.id;
             Node.links.push([end_node, start_node]);
             Node.drawLines();
-            $(this.linkRow(this.links_id, end_node, this.weight_id)).appendTo(`#${this.links_id}`);
-            $(this.linkRow(Node.linkingNode.links_id, start_node, Node.linkingNode.weight_id)).appendTo(`#${Node.linkingNode.links_id}`);
+            $(this.linkRow(this.links_id, end_node, this.weight_id, this.toggleLink_id, this.deleteLink_id)).appendTo(`#${this.links_id}`);
+            $(this.linkRow(Node.linkingNode.links_id, start_node, Node.linkingNode.weight_id, Node.linkingNode.toggleLink_id, Node.linkingNode.deleteLink_id)).appendTo(`#${Node.linkingNode.links_id}`);
             this.links[end_node] = 1;
             this.links.length++;
             Node.linkingNode.links[start_node] = 1;
@@ -176,6 +182,40 @@ class Node{
         }
     }
 
+    toggleLink(event){
+        let id = $(event.target).attr('id');
+        let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
+        console.log(id);
+    }
+
+    deleteLink(event){
+        let id = $(event.target).attr('id');
+        let target_id = id.substring(this.deleteLink_id.length + '_'.length, id.length);
+        this.removelink(target_id);
+        Node.nodes[target_id].removelink(this.id);
+        Node.SPF();
+        for(const[target, node] of Object.entries(Node.nodes)){
+            node.updateTable();
+        }
+
+        let removeValues = [];
+        for(let i=0 ; i< Node.links.length; i++){
+            if(Node.links[i][0] == this.id && Node.links[i][1] == target_id){
+                removeValues.push(Node.links[i]);
+            }
+            if(Node.links[i][0] == target_id && Node.links[i][1] == this.id){
+                removeValues.push(Node.links[i]);
+            }
+        }
+        //remove index from global links
+        for(let i=0; i< removeValues.length; i++){
+            Node.links.splice(Node.links.indexOf(removeValues[i]),1);
+        }
+        
+        console.table(Node.links);
+        Node.drawLines();
+    }
+
     addlink(){
         Node.linking = true;
         Node.linkingNode = this;
@@ -197,12 +237,12 @@ class Node{
 
     }
 
-    linkRow(link_id, target_id, weight_id){
+    linkRow(link_id, target_id, weight_id, toggleLink_id, deleteLink_id){
         return `<tr id=${link_id + '_' + target_id}>
                 <td>Node <b>${target_id}</b></td>
                 <td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td>
-                <td><button style='width: 100%' disabled>-</button></td>
-                <td><button style='width: 100%' disabled>x</button></td>
+                <td><button class='${toggleLink_id}' id='${toggleLink_id + '_' + target_id}' style='width: 100%'>-</button></td>
+                <td><button class='${deleteLink_id}' id='${deleteLink_id + '_' + target_id}' style='width: 100%'>x</button></td>
             </tr>`;
     }
 
