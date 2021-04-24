@@ -165,7 +165,9 @@ class Node{
             if($(`#${this.paths_id + '_' + target}`).length){
                 $(`#${this.paths_id + '_' + target}`).remove();
             }
-            $(this.pathRow(this.paths_id, target, (this.distances[target] == Number.MAX_VALUE) ? 'Unreachable' : this.distances[target],  (this.distances[target] == Number.MAX_VALUE) ? 'NA' : this.forwarding[target])).appendTo(`#${this.paths_id}`);
+            if(this.distances[target] != Number.MAX_VALUE && this.distances[target] != Number.MAX_VALUE){
+                $(this.pathRow(this.paths_id, target, this.distances[target], this.forwarding[target])).appendTo(`#${this.paths_id}`);
+            }
         } 
     }
 
@@ -201,15 +203,16 @@ class Node{
                 Node.nodes[key].removelink(this.id);
             }
         }
+        //remove from global nodes list
+        delete Node.nodes[this.id];
         //redraw links
         Node.drawLines();
         //remove table entries and recalculate
         Node.SPF();
         for(const[target, node] of Object.entries(Node.nodes)){
             node.updateTable();
+            $(`#${node.paths_id + '_' + this.id}`).remove();
         }
-        //remove from global nodes list
-        delete Node.nodes[this.id];
     }
 
     removelink(id){
