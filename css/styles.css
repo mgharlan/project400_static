@@ -42,3 +42,7 @@ table, th, td {
     outline: none;
     box-shadow: none;
 }
+
+.disabled{
+    filter: saturate(500%) hue-rotate(150deg) contrast(110%);
+}
