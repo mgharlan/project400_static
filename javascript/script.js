@@ -276,7 +276,7 @@ class Node{
     createNode(top, left){
         return `
         <img 
-            src='img/frog.svg' 
+            src='img/node.svg' 
             draggable='false' 
             class='node' 
             id='${this.node_id}' 
