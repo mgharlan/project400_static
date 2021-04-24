@@ -33,6 +33,7 @@ class Node{
     static linking = false;
     static linkingNode = null;
     static links = [];
+    static disabled = [];
     constructor(){
         this.id = Node.count;
         this.node_id = Node.nodePrefix + this.id;
@@ -184,8 +185,40 @@ class Node{
 
     toggleLink(event){
         let id = $(event.target).attr('id');
-        let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
-        console.log(id);
+        let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
+        if($(event.target).html() == '-'){
+            this.removelink(target_id, false);
+            Node.nodes[target_id].removelink(this.id, false);
+            Node.SPF();
+            for(const[target, node] of Object.entries(Node.nodes)){
+                node.updateTable();
+            }
+
+            let removeValues = [];
+            target_id = parseInt(target_id);
+            for(let i=0 ; i< Node.links.length; i++){
+                if(Node.links[i][0] == this.id && Node.links[i][1] == target_id){
+                    removeValues.push(Node.links[i]);
+                    Node.disabled.push([this.id, target_id]);
+                }
+                if(Node.links[i][0] == target_id && Node.links[i][1] == this.id){
+                    removeValues.push(Node.links[i]);
+                    Node.disabled.push([target_id, this.id]);
+                }
+            }
+            for(let i=0; i< removeValues.length; i++){
+                Node.links.splice(Node.links.indexOf(removeValues[i]),1);
+            }
+
+            $(event.target).html("+");
+            $(`#${Node.nodes[target_id].toggleLink_id + '_' + this.id}`).html('+');
+            $(`#${this.deleteLink_id + '_' + target_id}`).prop("disabled", true);
+            $(`#${Node.nodes[target_id].deleteLink_id + '_' + this.id}`).prop("disabled", true);
+        }
+        if($(event.target).html() == '+'){
+
+        }
+        Node.drawLines();
     }
 
     deleteLink(event){
@@ -212,7 +245,6 @@ class Node{
             Node.links.splice(Node.links.indexOf(removeValues[i]),1);
         }
         
-        console.table(Node.links);
         Node.drawLines();
     }
 
@@ -281,11 +313,13 @@ class Node{
         }
     }
 
-    removelink(id){
+    removelink(id, remove = true){
         delete this.links[id];
-        this.links.length--;
-
-        $(`#${this.links_id + '_' + id}`).remove();
+        
+        if(remove){
+            this.links.length--;
+            $(`#${this.links_id + '_' + id}`).remove();
+        }
         if(this.links.length == 0){
             $(`#none_${this.id}`).show();
         }
@@ -319,6 +353,22 @@ class Node{
             let y_end = end_node.position().top - $('.top-bar').height() + end_node.height()/2;
             ctx.moveTo(x_start, y_start);
             ctx.lineTo(x_end, y_end);
+            ctx.strokeStyle = "#000000";
+            ctx.stroke();
+        });
+        //disabled links
+        Node.disabled.forEach((node_pair)=>{
+            let start_node = $(`#${Node.nodePrefix + node_pair[0]}`);
+            let end_node = $(`#${Node.nodePrefix + node_pair[1]}`);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            let x_start = start_node.position().left + start_node.width()/2;
+            let y_start = start_node.position().top - $('.top-bar').height() + start_node.height()/2;
+            let x_end = end_node.position().left + end_node.width()/2;
+            let y_end = end_node.position().top - $('.top-bar').height() + end_node.height()/2;
+            ctx.moveTo(x_start, y_start);
+            ctx.lineTo(x_end, y_end);
+            ctx.strokeStyle = "#FF0000";
             ctx.stroke();
         });
     }
@@ -464,7 +514,7 @@ class Node{
                 
                 if( u !== null){
                     for(const[neighbor, weight] of Object.entries(Node.nodes[u].links)){
-                        if(neighbor == 'length' || Node.nodes[neighbor].disabled){
+                        if(neighbor == 'length' || Node.nodes[neighbor].disabled || Node.disabled.includes([neighbor, Node.nodes[u].id]) || Node.disabled.includes([Node.nodes[u].id, neighbor])){
                             continue;
                         }
                         if(Q.includes(neighbor)){
