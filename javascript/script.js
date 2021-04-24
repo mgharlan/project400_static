@@ -170,6 +170,10 @@ class Node{
             $(`#${this.node_id}`).addClass('disabled');
             $(`#${this.disable_id}`).html('Enable')
         }
+        Node.SPF();
+        for(const[target, node] of Object.entries(Node.nodes)){
+            node.updateTable();
+        }
     }
 
     addlink(){
@@ -194,7 +198,12 @@ class Node{
     }
 
     linkRow(link_id, target_id, weight_id){
-        return `<tr id=${link_id + '_' + target_id}><td>Node <b>${target_id}</b></td><td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td></tr>`;
+        return `<tr id=${link_id + '_' + target_id}>
+                <td>Node <b>${target_id}</b></td>
+                <td><input class='${weight_id}' id='${weight_id + '_' + target_id}' style="width:50px" value='1' min='1' type='number'/></td>
+                <td><button style='width: 100%' disabled>-</button></td>
+                <td><button style='width: 100%' disabled>x</button></td>
+            </tr>`;
     }
 
     deleteNode(){
@@ -415,6 +424,9 @@ class Node{
                 
                 if( u !== null){
                     for(const[neighbor, weight] of Object.entries(Node.nodes[u].links)){
+                        if(neighbor == 'length' || Node.nodes[neighbor].disabled){
+                            continue;
+                        }
                         if(Q.includes(neighbor)){
                             let alt = dist[u] + weight;
                             if(alt < dist[neighbor]){
