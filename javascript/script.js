@@ -233,6 +233,11 @@ class Node{
         this.links[target_id] = parseInt(weight);
         Node.nodes[target_id].links[this.id] = parseInt(weight);
         $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
+
+        Node.SPF();
+        for(const[target, node] of Object.entries(Node.nodes)){
+            node.updateTable();
+        }
     }
 
     static drawLines(){
@@ -253,7 +258,7 @@ class Node{
     }
 
     placeNode(){
-        let left = Math.floor(Math.random()*80);
+        let left = Math.floor(Math.random()*80) + 10;
         let top = Math.floor(Math.random()*80) + 10;
         this.node = $(this.createNode(top, left)).appendTo(main);
         this.menu = $(this.createMenu(top, left)).appendTo(main);
