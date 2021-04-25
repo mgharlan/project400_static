@@ -214,11 +214,49 @@ class Node{
             $(`#${Node.nodes[target_id].toggleLink_id + '_' + this.id}`).html('+');
             $(`#${this.deleteLink_id + '_' + target_id}`).prop("disabled", true);
             $(`#${Node.nodes[target_id].deleteLink_id + '_' + this.id}`).prop("disabled", true);
+            $(`#${this.weight_id + '_' + target_id}`).prop("disabled", true);
+            $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).prop("disabled", true);
+
+            Node.drawLines();
+
+            return;
         }
         if($(event.target).html() == '+'){
+            $(event.target).html("-");
+            $(`#${Node.nodes[target_id].toggleLink_id + '_' + this.id}`).html('-');
+            $(`#${this.deleteLink_id + '_' + target_id}`).prop("disabled", false);
+            $(`#${Node.nodes[target_id].deleteLink_id + '_' + this.id}`).prop("disabled", false);
+            $(`#${this.weight_id + '_' + target_id}`).prop("disabled", false);
+            $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).prop("disabled", false);
 
+            let removeValues = [];
+            target_id = parseInt(target_id);
+            for(let i=0 ; i< Node.disabled.length; i++){
+                if(Node.disabled[i][0] == this.id && Node.disabled[i][1] == target_id){
+                    removeValues.push(Node.disabled[i]);
+                    Node.links.push([this.id, target_id]);
+                }
+                if(Node.disabled[i][0] == target_id && Node.disabled[i][1] == this.id){
+                    removeValues.push(Node.disabled[i]);
+                    Node.links.push([target_id, this.id]);
+                }
+            }
+            for(let i=0; i< removeValues.length; i++){
+                Node.disabled.splice(Node.disabled.indexOf(removeValues[i]),1);
+            }
+
+            //readd weight
+            this.links[target_id] = parseInt($(`#${this.weight_id + '_' + target_id}`).val());
+            Node.nodes[target_id].links[this.id] = parseInt($(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val());
+            Node.SPF();
+            for(const[target, node] of Object.entries(Node.nodes)){
+                node.updateTable();
+            }
+
+            Node.drawLines();
+
+            return;
         }
-        Node.drawLines();
     }
 
     deleteLink(event){
@@ -357,9 +395,11 @@ class Node{
         let weight = $(event.target).val();
         let target_id = id.substring(this.weight_id.length + '_'.length, id.length);
 
-        this.links[target_id] = parseInt(weight);
-        Node.nodes[target_id].links[this.id] = parseInt(weight);
-        $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
+        if(this.links[target_id] !== undefined){
+            this.links[target_id] = parseInt(weight);
+            Node.nodes[target_id].links[this.id] = parseInt(weight);
+            $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
+        }
 
         Node.SPF();
         for(const[target, node] of Object.entries(Node.nodes)){
