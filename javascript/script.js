@@ -295,6 +295,33 @@ class Node{
         for(let i=0; i< removeValues.length; i++){
             Node.links.splice(Node.links.indexOf(removeValues[i]),1);
         }
+
+        removeValues = [];
+        //gather global indices
+        for(let i=0 ; i< Node.disabled.length; i++){
+            if(Node.disabled[i][0] == this.id){
+                removeValues.push(Node.disabled[i]);
+                let target = Node.disabled[i][1];
+                Node.nodes[target].links.length--;
+                $(`#${Node.nodes[target].links_id + '_' + this.id}`).remove();
+                if(Node.nodes[target].links.length == 0){
+                    $(`#none_${Node.nodes[target].id}`).show();
+                }
+            }
+            if(Node.disabled[i][1] == this.id){
+                removeValues.push(Node.disabled[i]);
+                let target = Node.disabled[i][0];
+                Node.nodes[target].links.length--;
+                $(`#${Node.nodes[target].links_id + '_' + this.id}`).remove();
+                if(Node.nodes[target].links.length == 0){
+                    $(`#none_${Node.nodes[target].id}`).show();
+                }
+            }
+        }
+        //remove index from global links
+        for(let i=0; i< removeValues.length; i++){
+            Node.disabled.splice(Node.disabled.indexOf(removeValues[i]),1);
+        }
         //remove from local links
         for(const[key, value] of Object.entries(this.links)){
             if(key != 'length'){
