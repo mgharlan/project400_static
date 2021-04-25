@@ -159,11 +159,15 @@ class Node{
     showPathTable(){
         $(`#table_${this.links_id}`).hide();
         $(`#table_${this.paths_id}`).show();
+        let centered = this.node.position().left - (this.menu.width() - this.node.width())/2;
+        this.menu.css('left', centered + 'px');
     }
     
     showlinkTable(){
         $(`#table_${this.links_id}`).show();
         $(`#table_${this.paths_id}`).hide();
+        let centered = this.node.position().left - (this.menu.width() - this.node.width())/2;
+        this.menu.css('left', centered + 'px');
     }
 
     toggleNode(){
