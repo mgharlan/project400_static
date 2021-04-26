@@ -181,13 +181,14 @@ class Node{
             $(`#${this.node_id}`).addClass('disabled');
             $(`#${this.disable_id}`).html('Enable')
         }
-        Node.SPF();
-        for(const[target, node] of Object.entries(Node.nodes)){
-            node.updateTable();
-        }
+        // Node.SPF();
+        // for(const[target, node] of Object.entries(Node.nodes)){
+        //     node.updateTable();
+        // }
     }
 
     toggleLink(event){
+        //just mark this link as not good here and let other nodes figure it out
         let id = $(event.target).attr('id');
         let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
         if($(event.target).html() == '-'){
