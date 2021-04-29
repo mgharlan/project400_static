@@ -1,5 +1,7 @@
 let main = null;
 let ctx = null;
+let clock = null;
+let time = 1;
 
 $().ready(function(){
     main = $('#main');
@@ -7,8 +9,18 @@ $().ready(function(){
     canvas.setAttribute('width', main.width());
     canvas.setAttribute('height', main.height());
     ctx = canvas.getContext("2d");
-    
+
+    clock = $('#clock');
+    clock_run();
 });
+
+async function clock_run(){
+    while(true){
+        await new Promise(r => setTimeout(r, 1000));
+        time++;
+        clock.html(`Time: ${time}`);
+    }
+};
 
 function addNode(){
     new Node();

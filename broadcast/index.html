@@ -6,10 +6,16 @@
     <script type="text/javascript" src="javascript/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="javascript/script.js"></script>
 </head>
+
 <body style='margin: 0; overflow: hidden;'>
     <div class="top-bar">
-        <button id='add' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;" onclick=addNode()>Add</button>
-        <button id='SPF' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;" onclick=Node.SPF()>Calculate</button>
+        <button id='add' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;"
+            onclick=addNode()>Add</button>
+        <button id='SPF' style="position: relative; top:50%; transform: translateY(-50%); margin-left: 10px;"
+            onclick=Node.SPF()>Calculate</button>
+        <div style="position: relative; top: 50%; height: 50%; transform: translateY(-50%); margin-left: 10px">
+            <p id=clock>Time: 1</p>
+        </div>
     </div>
     <div id='main'>
         <canvas id="canvas"></canvas>
