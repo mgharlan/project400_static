@@ -1,6 +1,7 @@
 let main = null;
 let ctx = null;
 let clock = null;
+let clock_value = null;
 let time = 1;
 
 $().ready(function(){
@@ -62,7 +63,9 @@ class Node{
         this.deleteLink_id = Node.deleteLinkPrefix + this.id;
         this.links = {};
         this.links.length = 0;
+        this.disabledLinks = {};
         this.disabled = false;
+        
         Node.nodes[this.id] = this;
         
         this.placeNode();
@@ -72,6 +75,15 @@ class Node{
         this.subscribeEvents();
         
         Node.count++;
+
+        this.run_clock();
+    }
+
+    async run_clock(){
+        while(true){
+            await new Promise(r => setTimeout(r, 1000));
+            this.ping();
+        }
     }
 
     subscribeEvents(){
@@ -166,6 +178,10 @@ class Node{
 
     mouseup(){
         this.isDown = false;
+    }
+
+    ping(){
+        console.log(this.id);
     }
     
     showPathTable(){
