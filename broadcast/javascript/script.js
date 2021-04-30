@@ -11,6 +11,7 @@ $().ready(function(){
     canvas.setAttribute('height', main.height());
     ctx = canvas.getContext("2d");
 
+    clock_value = $('#clock_value');
     clock = $('#clock');
     clock_run();
 });
@@ -19,6 +20,7 @@ async function clock_run(){
     while(true){
         await new Promise(r => setTimeout(r, 1000));
         time++;
+        clock_value.val(time);
         clock.html(`Time: ${time}`);
     }
 };
@@ -180,8 +182,41 @@ class Node{
         this.isDown = false;
     }
 
-    ping(){
-        console.log(this.id);
+    async ping(){
+        for(const [link, weight] of Object.entries(this.links)){
+            if(link == 'length'){
+                continue;
+            }
+            else if(Node.nodes[link].disabled){
+                if(link in this.disabledLinks){
+                    continue;
+                }
+                this.broadcastDown(link, weight);
+            }
+            else if(link in this.disabledLinks){
+                delete this.disabledLinks[link];
+                this.broadcastUp(link);
+            }
+        }
+    }
+
+    async broadcastDown(link, weight){
+        if(!(link in this.disabledLinks)){
+            this.disabledLinks[link] = weight;
+            await new Promise(r => setTimeout(r, 1000));
+            console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is disabled at t=${clock_value.val()}`);
+            for(const [node_id, _] of Object.entries(this.links)){
+                if(node_id != 'length' && node_id != link){
+                    Node.nodes[node_id].broadcastDown(link, weight);
+                }
+            } 
+            this.nodeSPF();
+            this.updateTable();
+        }
+    }
+
+    broadcastUp(link){
+
     }
     
     showPathTable(){
@@ -203,11 +238,13 @@ class Node{
             this.disabled = false;
             $(`#${this.node_id}`).removeClass('disabled');
             $(`#${this.disable_id}`).html('Disable')
+            console.log(`Admin enabled ${this.node_id} at t=${clock_value.val()}`);
         }
         else{
             this.disabled = true;
             $(`#${this.node_id}`).addClass('disabled');
             $(`#${this.disable_id}`).html('Enable')
+            console.log(`Admin disabled ${Node.nodePrefix +  this.id} at t=${clock_value.val()}`);
         }
         // Node.SPF();
         // for(const[target, node] of Object.entries(Node.nodes)){
@@ -575,7 +612,7 @@ class Node{
                 hop = this.path[hop];
             }
             this.forwarding[target] += (this.forwarding[target].includes(hop)) ? "" : hop;
-            this.forwarding[target] = this.forwarding[target].split("").reverse().join("");
+            this.forwarding[target] = this.forwarding[target].split("").reverse().join("")[0];
         }
     }
 
@@ -589,6 +626,52 @@ class Node{
             }
         }
         return v_node;
+    }
+
+    nodeSPF(){
+        let node_id = this.id;
+        //let node_id = Node.nodes[0].id;
+        //let currentNode = Node.nodes[0];
+        let dist = {};
+        let previous = {};
+        let Q = [];
+        //setup inial objects
+        for(const [key, value] of Object.entries(Node.nodes)){
+            dist[key] = Number.MAX_VALUE;
+            previous[key] = undefined;
+            Q.push(key);
+        }
+        //setup initial state for the current node
+        dist[node_id] = 0;
+        previous[node_id] = node_id;
+
+        while(Q.length != 0){
+            let u = Node.getNextNode(Q, dist);
+            Q.splice(Q.indexOf(u), 1);
+            
+            if( u !== null){
+                for(const[neighbor, weight] of Object.entries(Node.nodes[u].links)){
+                    if(neighbor == 'length' || Node.nodes[neighbor].disabled || Node.disabled.includes([neighbor, Node.nodes[u].id]) || Node.disabled.includes([Node.nodes[u].id, neighbor])){
+                        continue;
+                    }
+                    if(Q.includes(neighbor)){
+                        let alt = dist[u] + weight;
+                        if(alt < dist[neighbor]){
+                            dist[neighbor] = alt;
+                            if(u == node_id){
+                                previous[neighbor] = neighbor;
+                            }
+                            else{
+                                previous[neighbor] = u;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        this.distances = dist;
+        this.path = previous;
+        this.createForwardingTable();
     }
 
     static SPF(){

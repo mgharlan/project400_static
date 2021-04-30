@@ -546,7 +546,7 @@ class Node{
                 hop = this.path[hop];
             }
             this.forwarding[target] += (this.forwarding[target].includes(hop)) ? "" : hop;
-            this.forwarding[target] = this.forwarding[target].split("").reverse().join("");
+            this.forwarding[target] = this.forwarding[target].split("").reverse().join("")[0];
         }
     }
 
