@@ -258,6 +258,7 @@ class Node{
         }
     }
     
+    //hide the path table and show the link table
     showPathTable(){
         $(`#table_${this.links_id}`).hide();
         $(`#table_${this.paths_id}`).show();
@@ -265,6 +266,7 @@ class Node{
         this.menu.css('left', centered + 'px');
     }
     
+    //hide the link table and show the path table
     showlinkTable(){
         $(`#table_${this.links_id}`).show();
         $(`#table_${this.paths_id}`).hide();
