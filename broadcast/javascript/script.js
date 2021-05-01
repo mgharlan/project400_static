@@ -67,6 +67,7 @@ class Node{
         this.links.length = 0;
         this.disabledLinks = {};
         this.disabled = false;
+        this.downed = {};
         
         Node.nodes[this.id] = this;
         
@@ -82,9 +83,11 @@ class Node{
     }
 
     async run_clock(){
-        while(true){
+        while(this.ping != null){
             await new Promise(r => setTimeout(r, 1000));
-            this.ping();
+            if(this.ping != null){
+                this.ping();
+            }
         }
     }
 
@@ -183,17 +186,26 @@ class Node{
     }
 
     async ping(){
+        //check links
+        for(const [link, weight] of Object.entries(this.downed)){
+           if(link in this.disabledLinks) {
+               continue;
+           }
+           this.broadcastDown(link, weight);
+        } 
+
+        //check nodes
         for(const [link, weight] of Object.entries(this.links)){
             if(link == 'length'){
                 continue;
             }
-            else if(Node.nodes[link].disabled){
+            if(Node.nodes[link].disabled){
                 if(link in this.disabledLinks){
                     continue;
                 }
                 this.broadcastDown(link, weight);
             }
-            else if(link in this.disabledLinks){
+            else if(link in this.disabledLinks && !(link in this.downed)){
                 this.broadcastUp(link, weight);
             }
         }
@@ -216,14 +228,14 @@ class Node{
 
     async broadcastUp(link, weight){
         if(link in this.disabledLinks || !(link in this.links)){
-            if(this.disabledLinks[link]){
-                delete this.disabledLinks[link];
-            }
+            delete this.disabledLinks[link];
             await new Promise(r => setTimeout(r, 1000));
             console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is enabled at t=${clock_value.val()}`);
             for(const [node_id, _] of Object.entries(this.links)){
                 if(node_id != 'length' && node_id != link){
-                    Node.nodes[node_id].broadcastUp(link, weight);
+                    if(node_id in Node.nodes){
+                        Node.nodes[node_id].broadcastUp(link, weight);
+                    }
                 }
             } 
             this.nodeSPF();
@@ -265,7 +277,10 @@ class Node{
         let id = $(event.target).attr('id');
         let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
         if($(event.target).html() == '-'){
+            console.log(`Admin disabled connection between ${this.node_id} & ${Node.nodePrefix + target_id} at t=${clock_value.val()}`);
+            this.downed[target_id] = this.links[target_id];
             this.removelink(target_id, false);
+            Node.nodes[target_id].downed[this.id] = this.links[target_id];
             Node.nodes[target_id].removelink(this.id, false);
             Node.SPF();
             for(const[target, node] of Object.entries(Node.nodes)){
@@ -300,6 +315,7 @@ class Node{
             return;
         }
         if($(event.target).html() == '+'){
+            console.log(`Admin enabled connection between ${this.node_id} & ${Node.nodePrefix + target_id} at t=${clock_value.val()}`);
             $(event.target).html("-");
             $(`#${Node.nodes[target_id].toggleLink_id + '_' + this.id}`).html('-');
             $(`#${this.deleteLink_id + '_' + target_id}`).prop("disabled", false);
@@ -325,7 +341,9 @@ class Node{
 
             //readd weight
             this.links[target_id] = parseInt($(`#${this.weight_id + '_' + target_id}`).val());
+            delete this.downed[target_id];
             Node.nodes[target_id].links[this.id] = parseInt($(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val());
+            delete Node.nodes[target_id].downed[this.id];
             Node.SPF();
             for(const[target, node] of Object.entries(Node.nodes)){
                 node.updateTable();
@@ -442,6 +460,9 @@ class Node{
         for(const[key, value] of Object.entries(this.links)){
             if(key != 'length'){
                 Node.nodes[key].removelink(this.id);
+                if(this.id in Node.nodes[key].disabledLinks){
+                    delete Node.nodes[key].disabledLinks[this.id];
+                }
             }
         }
         //remove from global nodes list
@@ -454,6 +475,8 @@ class Node{
             node.updateTable();
             $(`#${node.paths_id + '_' + this.id}`).remove();
         }
+        this.run_clock = null;
+        this.ping = null;
     }
 
     removelink(id, remove = true){
