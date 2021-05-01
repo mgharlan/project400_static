@@ -194,8 +194,7 @@ class Node{
                 this.broadcastDown(link, weight);
             }
             else if(link in this.disabledLinks){
-                delete this.disabledLinks[link];
-                this.broadcastUp(link);
+                this.broadcastUp(link, weight);
             }
         }
     }
@@ -215,8 +214,21 @@ class Node{
         }
     }
 
-    broadcastUp(link){
-
+    async broadcastUp(link, weight){
+        if(link in this.disabledLinks || !(link in this.links)){
+            if(this.disabledLinks[link]){
+                delete this.disabledLinks[link];
+            }
+            await new Promise(r => setTimeout(r, 1000));
+            console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is enabled at t=${clock_value.val()}`);
+            for(const [node_id, _] of Object.entries(this.links)){
+                if(node_id != 'length' && node_id != link){
+                    Node.nodes[node_id].broadcastUp(link, weight);
+                }
+            } 
+            this.nodeSPF();
+            this.updateTable();
+        }
     }
     
     showPathTable(){
@@ -246,10 +258,6 @@ class Node{
             $(`#${this.disable_id}`).html('Enable')
             console.log(`Admin disabled ${Node.nodePrefix +  this.id} at t=${clock_value.val()}`);
         }
-        // Node.SPF();
-        // for(const[target, node] of Object.entries(Node.nodes)){
-        //     node.updateTable();
-        // }
     }
 
     toggleLink(event){
