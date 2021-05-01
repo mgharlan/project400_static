@@ -403,6 +403,7 @@ class Node{
         Node.linkingNode = this;
     }
     
+    //updates the path table
     updateTable(){
         for(const[target, node] of Object.entries(Node.nodes)){
             if($(`#${this.paths_id + '_' + target}`).length){
@@ -414,11 +415,13 @@ class Node{
         } 
     }
 
+    //adds the html for a path on the paths table in the node menu
     pathRow(paths_id, target, distance, forward){
         return `<tr id='${paths_id + '_' + target}'><td>${target}</td><td>${distance}</td><td>${forward}</td></tr>`;
 
     }
 
+    //adds the html for a link on the link table in the node menu
     linkRow(link_id, target_id, weight_id, toggleLink_id, deleteLink_id){
         return `<tr id=${link_id + '_' + target_id}>
                 <td>Node <b>${target_id}</b></td>
@@ -507,6 +510,7 @@ class Node{
         }
     }
 
+    //changes the weight of a link between two nodes
     changeWeight(event){
         let id = $(event.target).attr('id');
         let weight = $(event.target).val();
@@ -518,12 +522,14 @@ class Node{
             $(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val(weight);
         }
 
+        //calculate forwarding table for all nodes
         Node.SPF();
         for(const[target, node] of Object.entries(Node.nodes)){
             node.updateTable();
         }
     }
 
+    //draws the links on the canvas
     static drawLines(){
         ctx.clearRect(0,0, canvas.width, canvas.height);
         Node.links.forEach((node_pair)=>{
@@ -557,6 +563,7 @@ class Node{
         });
     }
 
+    //adds the node positionally to the screen
     placeNode(){
         let left = Math.floor(Math.random()*80) + 10;
         let top = Math.floor(Math.random()*80) + 10;
@@ -578,6 +585,7 @@ class Node{
         this.menu.css('top', menu_y_adj + menu_y_shift);
     }
 
+    //creates the node image
     createNode(top, left){
         return `
         <img 
@@ -591,6 +599,7 @@ class Node{
         ></img>`
     }
     
+    //creates the html for the node menu
     createMenu(top, left){
         return `
         <div draggable='false' id='${this.menu_id}' style='top: ${top}%; left: ${left}%; display: none; position: absolute;'>
@@ -647,6 +656,7 @@ class Node{
         </div>`
     };
 
+    //creates the forwearding table for the node menu
     createForwardingTable(){
         this.forwarding = {};
         for(const[target, step] of Object.entries(this.path)){
@@ -663,6 +673,7 @@ class Node{
         }
     }
 
+    //gets the next node for dijkstras algorithm
     static getNextNode(Q, dist){
         let v = Number.MAX_VALUE;
         let v_node = null;
@@ -675,6 +686,7 @@ class Node{
         return v_node;
     }
 
+    //implements the shortest path first algorithm for a single node
     nodeSPF(){
         let node_id = this.id;
         //let node_id = Node.nodes[0].id;
@@ -721,6 +733,7 @@ class Node{
         this.createForwardingTable();
     }
 
+    //implements the shortest path first algorithm
     static SPF(){
         for(const[node_id, currentNode] of Object.entries(Node.nodes)){
             //let node_id = Node.nodes[0].id;

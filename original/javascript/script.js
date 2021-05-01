@@ -1,6 +1,7 @@
 let main = null;
 let ctx = null;
 
+//sets up the canvas for drawing lines
 $().ready(function(){
     main = $('#main');
     let canvas = document.getElementById('canvas');
@@ -10,10 +11,12 @@ $().ready(function(){
     
 });
 
+//adds a new nodw to the screen
 function addNode(){
     new Node();
 }
 
+//class that represents the nodes
 class Node{
     static count = 0;
     static nodes = {};
@@ -62,6 +65,7 @@ class Node{
         Node.count++;
     }
 
+    //adds event handlers to the elements on the screen
     subscribeEvents(){
         this.node.on('click', this.onClick.bind(this)); 
 
@@ -79,6 +83,7 @@ class Node{
         main.on('click', `#${this.disable_id}`, this.toggleNode.bind(this));
     }
 
+    //when the node is clicked and not dragged, toggle the node menu
     onClick(){
         
         if(Node.linking && this.node != Node.linkingNode.node && !(this.id in Node.linkingNode.links)){
@@ -119,10 +124,12 @@ class Node{
         }
     }
 
+    //drag check
     mousedown(){
         this.isDown = true;
     }
 
+    //move the node when being dragged
     mousemove(event){
         if(this.isDown){
             this.wasDragging = true;
@@ -152,10 +159,12 @@ class Node{
         }
     }
 
+    //drag event over
     mouseup(){
         this.isDown = false;
     }
     
+    //hide link table and show path table
     showPathTable(){
         $(`#table_${this.links_id}`).hide();
         $(`#table_${this.paths_id}`).show();
@@ -163,6 +172,7 @@ class Node{
         this.menu.css('left', centered + 'px');
     }
     
+    //hide path table and show link table
     showlinkTable(){
         $(`#table_${this.links_id}`).show();
         $(`#table_${this.paths_id}`).hide();
@@ -170,6 +180,7 @@ class Node{
         this.menu.css('left', centered + 'px');
     }
 
+    //enable/disble a node
     toggleNode(){
         if(this.disabled){
             this.disabled = false;
@@ -187,6 +198,7 @@ class Node{
         }
     }
 
+    //enable/disable a link
     toggleLink(event){
         let id = $(event.target).attr('id');
         let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
@@ -295,6 +307,7 @@ class Node{
         Node.linkingNode = this;
     }
     
+    //update the paths table to show new or changed path values
     updateTable(){
         for(const[target, node] of Object.entries(Node.nodes)){
             if($(`#${this.paths_id + '_' + target}`).length){
@@ -306,11 +319,13 @@ class Node{
         } 
     }
 
+    //create html for path entry in the path table
     pathRow(paths_id, target, distance, forward){
         return `<tr id='${paths_id + '_' + target}'><td>${target}</td><td>${distance}</td><td>${forward}</td></tr>`;
 
     }
 
+    //create html for link entry in the link table
     linkRow(link_id, target_id, weight_id, toggleLink_id, deleteLink_id){
         return `<tr id=${link_id + '_' + target_id}>
                 <td>Node <b>${target_id}</b></td>
@@ -394,6 +409,7 @@ class Node{
         }
     }
 
+    //change the weight of a link between two nodes
     changeWeight(event){
         let id = $(event.target).attr('id');
         let weight = $(event.target).val();
@@ -411,6 +427,7 @@ class Node{
         }
     }
 
+    //draw the links on the canvas
     static drawLines(){
         ctx.clearRect(0,0, canvas.width, canvas.height);
         Node.links.forEach((node_pair)=>{
@@ -444,6 +461,7 @@ class Node{
         });
     }
 
+    //place a new node at a semi random position on the screen
     placeNode(){
         let left = Math.floor(Math.random()*80) + 10;
         let top = Math.floor(Math.random()*80) + 10;
@@ -465,6 +483,7 @@ class Node{
         this.menu.css('top', menu_y_adj + menu_y_shift);
     }
 
+    //create the html for the node image
     createNode(top, left){
         return `
         <img 
@@ -478,6 +497,7 @@ class Node{
         ></img>`
     }
     
+    //create the html for the node menu
     createMenu(top, left){
         return `
         <div draggable='false' id='${this.menu_id}' style='top: ${top}%; left: ${left}%; display: none; position: absolute;'>
@@ -534,6 +554,7 @@ class Node{
         </div>`
     };
 
+    //create the forwarding table for the node
     createForwardingTable(){
         this.forwarding = {};
         for(const[target, step] of Object.entries(this.path)){
@@ -550,6 +571,7 @@ class Node{
         }
     }
 
+    //get the next node to be evaluated for dijkstras algorithm
     static getNextNode(Q, dist){
         let v = Number.MAX_VALUE;
         let v_node = null;
@@ -562,6 +584,7 @@ class Node{
         return v_node;
     }
 
+    //run shortests path first for all nodes
     static SPF(){
         for(const[node_id, currentNode] of Object.entries(Node.nodes)){
             //let node_id = Node.nodes[0].id;
