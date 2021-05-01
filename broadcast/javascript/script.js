@@ -4,6 +4,7 @@ let clock = null;
 let clock_value = null;
 let time = 1;
 
+//sets up the canvas for drawing lines
 $().ready(function(){
     main = $('#main');
     let canvas = document.getElementById('canvas');
@@ -16,6 +17,7 @@ $().ready(function(){
     clock_run();
 });
 
+//keeps track of time in the simulation
 async function clock_run(){
     while(true){
         await new Promise(r => setTimeout(r, 1000));
@@ -25,10 +27,12 @@ async function clock_run(){
     }
 };
 
+//adds a new node to the screen
 function addNode(){
     new Node();
 }
 
+//class that represents the node
 class Node{
     static count = 0;
     static nodes = {};
@@ -82,6 +86,7 @@ class Node{
         this.run_clock();
     }
 
+    //clock that simulates sending packets between the nodes and links in the network
     async run_clock(){
         while(this.ping != null){
             await new Promise(r => setTimeout(r, 1000));
@@ -91,6 +96,7 @@ class Node{
         }
     }
 
+    //add events to the elements on the screen
     subscribeEvents(){
         this.node.on('click', this.onClick.bind(this)); 
 
@@ -108,8 +114,9 @@ class Node{
         main.on('click', `#${this.disable_id}`, this.toggleNode.bind(this));
     }
 
+    //when the node is clicked, check to see if its a drag or a single click
     onClick(){
-        
+       //if node is clicked open the node menu 
         if(Node.linking && this.node != Node.linkingNode.node && !(this.id in Node.linkingNode.links)){
             let start_node = this.id;
             let end_node = Node.linkingNode.id;
@@ -148,10 +155,12 @@ class Node{
         }
     }
 
+    //for dragging
     mousedown(){
         this.isDown = true;
     }
 
+    //drag the node across the screen
     mousemove(event){
         if(this.isDown){
             this.wasDragging = true;
@@ -181,12 +190,14 @@ class Node{
         }
     }
 
+    //end drag
     mouseup(){
         this.isDown = false;
     }
 
+    //simulates the sending and recieving of packets to other nodes across links in the network
     async ping(){
-        //check links
+        //detects if links are down
         for(const [link, weight] of Object.entries(this.downed)){
            if(link in this.disabledLinks) {
                continue;
@@ -194,7 +205,7 @@ class Node{
            this.broadcastDown(link, weight);
         } 
 
-        //check nodes
+        //detect if nodes are down
         for(const [link, weight] of Object.entries(this.links)){
             if(link == 'length'){
                 continue;
@@ -211,9 +222,11 @@ class Node{
         }
     }
 
+    //broadcast that a link/node is down
     async broadcastDown(link, weight){
         if(!(link in this.disabledLinks)){
             this.disabledLinks[link] = weight;
+            //this weight represents the time it takes to realize it is down
             await new Promise(r => setTimeout(r, 1000));
             console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is disabled at t=${clock_value.val()}`);
             for(const [node_id, _] of Object.entries(this.links)){
@@ -226,9 +239,11 @@ class Node{
         }
     }
 
+    //broadcast that a previously downed node is up again
     async broadcastUp(link, weight){
         if(link in this.disabledLinks || !(link in this.links)){
             delete this.disabledLinks[link];
+            //this represents how long it took the node to realize the node was back up and start letting other nodes know
             await new Promise(r => setTimeout(r, 1000));
             console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is enabled at t=${clock_value.val()}`);
             for(const [node_id, _] of Object.entries(this.links)){
@@ -257,6 +272,7 @@ class Node{
         this.menu.css('left', centered + 'px');
     }
 
+    //enable/ disable node
     toggleNode(){
         if(this.disabled){
             this.disabled = false;
@@ -272,8 +288,8 @@ class Node{
         }
     }
 
+    //enbale/disable link
     toggleLink(event){
-        //just mark this link as not good here and let other nodes figure it out
         let id = $(event.target).attr('id');
         let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
         if($(event.target).html() == '-'){
