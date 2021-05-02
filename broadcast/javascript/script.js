@@ -241,7 +241,7 @@ class Node{
 
     //broadcast that a previously downed node is up again
     async broadcastUp(link, weight){
-        if(link in this.disabledLinks || !(link in this.link)){
+        if(link in this.disabledLinks || !(link in this.links)){
             delete this.disabledLinks[link];
             //this represents how long it took the node to realize the node was back up and start letting other nodes know
             await new Promise(r => setTimeout(r, 1000));
