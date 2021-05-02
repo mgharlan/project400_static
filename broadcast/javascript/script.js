@@ -241,16 +241,14 @@ class Node{
 
     //broadcast that a previously downed node is up again
     async broadcastUp(link, weight){
-        if(link in this.disabledLinks || !(link in this.links)){
+        if(link in this.disabledLinks){
             delete this.disabledLinks[link];
             //this represents how long it took the node to realize the node was back up and start letting other nodes know
             await new Promise(r => setTimeout(r, 1000));
             console.log(`${this.node_id} detected that ${Node.nodes[link].node_id} is enabled at t=${clock_value.val()}`);
             for(const [node_id, _] of Object.entries(this.links)){
                 if(node_id != 'length' && node_id != link){
-                    if(node_id in Node.nodes){
-                        Node.nodes[node_id].broadcastUp(link, weight);
-                    }
+                    Node.nodes[node_id].broadcastUp(link, weight);
                 }
             } 
             this.nodeSPF();
