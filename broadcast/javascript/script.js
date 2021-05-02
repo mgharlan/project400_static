@@ -241,7 +241,7 @@ class Node{
 
     //broadcast that a previously downed node is up again
     async broadcastUp(link, weight){
-        if(link in this.disabledLinks){
+        if(link in this.disabledLinks || !(link in this.link)){
             delete this.disabledLinks[link];
             //this represents how long it took the node to realize the node was back up and start letting other nodes know
             await new Promise(r => setTimeout(r, 1000));
@@ -298,10 +298,6 @@ class Node{
             this.removelink(target_id, false);
             Node.nodes[target_id].downed[this.id] = this.links[target_id];
             Node.nodes[target_id].removelink(this.id, false);
-            Node.SPF();
-            for(const[target, node] of Object.entries(Node.nodes)){
-                node.updateTable();
-            }
 
             let removeValues = [];
             target_id = parseInt(target_id);
@@ -360,10 +356,6 @@ class Node{
             delete this.downed[target_id];
             Node.nodes[target_id].links[this.id] = parseInt($(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val());
             delete Node.nodes[target_id].downed[this.id];
-            Node.SPF();
-            for(const[target, node] of Object.entries(Node.nodes)){
-                node.updateTable();
-            }
 
             Node.drawLines();
 
