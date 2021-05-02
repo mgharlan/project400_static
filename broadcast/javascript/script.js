@@ -71,7 +71,6 @@ class Node{
         this.links.length = 0;
         this.disabledLinks = {};
         this.disabled = false;
-        this.downed = {};
         
         Node.nodes[this.id] = this;
         
@@ -197,14 +196,6 @@ class Node{
 
     //simulates the sending and recieving of packets to other nodes across links in the network
     async ping(){
-        //detects if links are down
-        for(const [link, weight] of Object.entries(this.downed)){
-           if(link in this.disabledLinks) {
-               continue;
-           }
-           this.broadcastDown(link, weight);
-        } 
-
         //detect if nodes are down
         for(const [link, weight] of Object.entries(this.links)){
             if(link == 'length'){
@@ -216,7 +207,7 @@ class Node{
                 }
                 this.broadcastDown(link, weight);
             }
-            else if(link in this.disabledLinks && !(link in this.downed)){
+            else if(link in this.disabledLinks){
                 this.broadcastUp(link, weight);
             }
         }
@@ -294,9 +285,7 @@ class Node{
         let target_id = id.substring(this.toggleLink_id.length + '_'.length, id.length);
         if($(event.target).html() == '-'){
             console.log(`Admin disabled connection between ${this.node_id} & ${Node.nodePrefix + target_id} at t=${clock_value.val()}`);
-            this.downed[target_id] = this.links[target_id];
             this.removelink(target_id, false);
-            Node.nodes[target_id].downed[this.id] = this.links[target_id];
             Node.nodes[target_id].removelink(this.id, false);
             Node.SPF();
             for(const[target, node] of Object.entries(Node.nodes)){
@@ -357,9 +346,7 @@ class Node{
 
             //readd weight
             this.links[target_id] = parseInt($(`#${this.weight_id + '_' + target_id}`).val());
-            delete this.downed[target_id];
             Node.nodes[target_id].links[this.id] = parseInt($(`#${Node.nodes[target_id].weight_id + '_' + this.id}`).val());
-            delete Node.nodes[target_id].downed[this.id];
             Node.SPF();
             for(const[target, node] of Object.entries(Node.nodes)){
                 node.updateTable();
