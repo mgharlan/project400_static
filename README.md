@@ -27,3 +27,5 @@ For instant simulation version:
 For any questions regarding setup and installation, please contact me directly.
 
 Please note this was designed and tested for use in Google Chrome only.
+
+# <b>The report is available under mason_harlan_report.pdf </b>
